@@ -38,6 +38,7 @@ interface DesignWorkspaceProps {
   motifGuideVisible: boolean;
   materials: Material[];
   placements: Placement[];
+  previewPlacements?: readonly Placement[];
   selectedIds: ReadonlySet<string>;
   editorMode: EditorMode;
   activeMaterialId?: string;
@@ -211,6 +212,29 @@ const PlacementNodes = memo(function PlacementNodes({
   });
 });
 
+function PreviewPlacementNodes({
+  placements,
+  materials,
+  viewport,
+  pixelsPerMm,
+}: {
+  placements: readonly Placement[];
+  materials: readonly Material[];
+  viewport: ReturnType<typeof createViewportTransform>;
+  pixelsPerMm: number;
+}) {
+  return placements.map((placement) => {
+    const material = materials.find((item) => item.id === placement.materialId);
+    if (!material) return null;
+    const screen = worldToScreen({ x: placement.xMm, y: placement.yMm }, viewport);
+    return (
+      <Group key={`preview-${placement.id}`} listening={false} opacity={0.66} rotation={placement.rotationDeg} x={screen.x} y={screen.y}>
+        <MaterialShapeNode material={material} opacity={0.72} pixelsPerMm={pixelsPerMm} selected />
+      </Group>
+    );
+  });
+}
+
 function isMajorTick(valueMm: number, majorStepMm: number): boolean {
   const quotient = valueMm / majorStepMm;
   return Math.abs(quotient - Math.round(quotient)) < 1e-7;
@@ -226,6 +250,7 @@ export function DesignWorkspace({
   motifGuideVisible,
   materials,
   placements,
+  previewPlacements = [],
   selectedIds,
   editorMode,
   activeMaterialId,
@@ -501,6 +526,7 @@ export function DesignWorkspace({
         </div>
         <div className="workspace-meta" aria-label="Tasarım görünümü bilgileri">
           <span>{selectedIds.size} seçili</span>
+          {previewPlacements.length > 0 ? <><span className="workspace-meta__divider" /><span className="workspace-preview-count">{previewPlacements.length} önizleme</span></> : null}
           <span className="workspace-meta__divider" />
           <span>Motif {motif.widthMm} × {motif.heightMm} mm</span>
           <span className="workspace-meta__divider" />
@@ -666,6 +692,14 @@ export function DesignWorkspace({
               clipX={drawableRect.x}
               clipY={drawableRect.y}
             >
+              {previewPlacements.length > 0 ? (
+                <PreviewPlacementNodes
+                  materials={materials}
+                  pixelsPerMm={pixelsPerMm}
+                  placements={previewPlacements}
+                  viewport={viewport}
+                />
+              ) : null}
               <PlacementNodes
                 editorMode={editorMode}
                 materials={materials}
@@ -838,7 +872,7 @@ export function DesignWorkspace({
       <div className="workspace-statusbar">
         <span><strong>X</strong> {formatCoordinate(cursorMm.x)} mm</span>
         <span><strong>Y</strong> {formatCoordinate(cursorMm.y)} mm</span>
-        <span>{editorMode === "place" ? "Yerleştirme modu" : selectedIds.size > 0 ? "Nesne seçili" : "Seçim modu"}</span>
+        <span>{previewPlacements.length > 0 ? "Motif önizlemesi" : editorMode === "place" ? "Yerleştirme modu" : selectedIds.size > 0 ? "Nesne seçili" : "Seçim modu"}</span>
         <span className="workspace-statusbar__spacer" />
         <span>Motif hedefi: {motif.widthMm} × {motif.heightMm} mm</span>
         <span>Ölçek: {pixelsPerMm.toFixed(2)} px/mm</span>

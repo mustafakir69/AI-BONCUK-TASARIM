@@ -207,3 +207,17 @@ Ekrandaki görünüş ile çekirdek hesabı çelişirse çekirdek kararı esast�
 - Kopyalama, hassas çoğaltma, grup dönüşü ve hizalama önce bütün aday projeyi doğrular. Tek bir çakışma veya aralık ihlali varsa işlem kısmen uygulanmaz ve geçmişe girmez.
 - Hassas çoğaltma 1.000 tekrar ve 10.000 yeni yerleşimle sınırlıdır.
 
+## 15. Deterministik motif üretimi
+
+- Üretim dikdörtgeni, kullanıcının girdiği merkez `(centerXmm, centerYmm)` etrafında `widthMm × heightMm` fiziksel alandır. Sonsuz çalışma düzlemini veya proje motif kılavuzunu yeniden boyutlandırmaz.
+- Bir adayın merkezi içeride olsa bile gerçek daire ya da döndürülmüş çokgen AABB'si üretim dikdörtgenini aşıyorsa aday reddedilir. Kenara epsilon toleransı içinde temas geçerlidir.
+- Desen adayları seed tabanlı yerel PRNG ile örneklenir. Başarılı üretimde zaman, tarayıcı görünümü, pan/zoom veya `Math.random()` geometrik sonuca girmez.
+- Yatay aynada `(x,y,θ) → (x,-y,-θ)`, dikey aynada `(x,y,θ) → (-x,y,180°-θ)` uygulanır. Dört yönlü simetri bunların birleşimidir. Radyal simetride konum ve açı aynı `360°/n` adımıyla döner.
+- Simetri sonrası aynı merkez koordinatına epsilon hassasiyetinde düşen adaylardan yalnız biri değerlendirilir. Farklı malzeme seçimi aynı noktada ikinci nesne üretme hakkı vermez.
+- Kullanıcının seçmediği, katalogda bulunmayan veya etkin olmayan malzeme aday oluşturamaz. Placement yalnız `materialId` taşır; boyut, şekil ve renk katalogdan okunur.
+- Göreli malzeme oranları seed tabanlı ağırlıklı seçim hedefidir. Sınır/çakışma reddi gerçek oranı değiştirebileceğinden kesin kota değildir; rapor kabul edilen placement nesnelerini sayar.
+- Her aday önce üretim sınırına, sonra uzamsal hücre indeksinden gelen yakın yerleşimlere karşı kesin kesişim ve minimum uzaklık testine girer. Pul yine dış disk olarak değerlendirilir.
+- Önizleme geçici ve etkileşimsizdir. “Mevcut tasarıma ekle” işleminde kalıcı yerleşimler ile önizleme birlikte; “mevcut tasarımı değiştir” işleminde yalnız yeni motif yeniden `validateAllPlacements` ile doğrulanır.
+- Tek bir hata bütün uygulamayı reddeder. Başarısız üretim veya uygulama yerleşimleri, grupları, geçmişi ve adetleri kısmen değiştirmez.
+- Üretim en fazla 5.000 kabul, 40.000 aday ve 1.000 ms hesap bütçesiyle sınırlıdır. Sınır aşımında kullanıcıya yoğunluğu/tekrarı azaltma veya ölçüyü değiştirme önerilir.
+

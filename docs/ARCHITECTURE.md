@@ -16,10 +16,11 @@ Kullanıcı
    │
    ▼
 React editörü ──► Alan modeli + geometri çekirdeği
-   │                         │
+   │                         ▲
+   ├──► Deterministik motif üretici ──► Geçici önizleme / atomik komut
    ├──► JSON/JPEG uyarlayıcıları
    │
-   └──► (Aşama 6+) FastAPI ──► AI/görsel analiz sağlayıcıları
+   └──► (gelecek, ayrı onay) FastAPI ──► AI/görsel analiz sağlayıcıları
                                │
                                └──► Yapısal öneri
                                         │
@@ -27,7 +28,7 @@ React editörü ──► Alan modeli + geometri çekirdeği
                               Aynı geometri doğrulayıcısı
 ```
 
-Manuel ilk sürüm tarayıcı içinde ve yerel dosyalarla çalışır. Backend, ileride gizli anahtarları korumak, uzun süren işleri yönetmek ve yapay zekâ sağlayıcılarını soyutlamak için eklenir.
+Manuel editör ve Aşama 6 deterministik motif motoru tarayıcı içinde ve yerel dosyalarla çalışır. Backend, ancak ileride gizli anahtarları koruyan gerçek bir sağlayıcı veya uzun süren sunucu işi ayrıca onaylanırsa eklenir.
 
 ## 3. Katmanlar ve bağımlılık yönü
 
@@ -38,6 +39,7 @@ Manuel ilk sürüm tarayıcı içinde ve yerel dosyalarla çalışır. Backend, 
 - Dünya/ekran koordinat dönüşümleri, cetvel adımı ve görünür işaret hesapları
 - Sınır, çakışma, minimum aralık ve proje doğrulaması
 - Adet türetme
+- Seed tabanlı motif adayları, simetri dönüşümleri, sınır denetimi ve uzamsal ön eleme
 
 Bu katman React, Konva, tarayıcı API'si veya ağ istemcisi bilmez.
 
@@ -56,6 +58,7 @@ Bu katman React, Konva, tarayıcı API'si veya ağ istemcisi bilmez.
 - Orta çalışma alanı, cetvel ve ızgara
 - Sağ ayarlar, sayım ve nesne özellikleri paneli
 - Türkçe bildirimler, iletişim kutuları ve klavye etkileşimi
+- Motif üretim ayarları, yaklaşık tahmin, geçici önizleme ve gerçek üretim raporu
 
 ### Altyapı (`frontend/src/infrastructure`)
 
@@ -100,6 +103,7 @@ EditorState
 ├── selection.selectedIds   Geçici seçim durumu
 ├── viewport                viewCenterMm, pixelsPerMm, grid görünürlüğü
 ├── history                 undo/redo komutları veya anlık görüntüleri
+├── generationPreview       projeye yazılmayan motif placement önizlemesi
 └── interaction             sürükleme önizlemesi ve doğrulama mesajı
 ```
 
@@ -120,7 +124,7 @@ type EditorCommand =
 
 Sürükleme boyunca aday konum geçici olarak gösterilir; yalnız `dragEnd` sırasında geçerli komut geçmişe eklenir. Geçersiz adayda nesne son geçerli konumuna döner. Sürekli işaretçi hareketlerinin her biri geçmişe yazılmaz.
 
-Aşama 3'te terslenebilir komut yaklaşımı seçilmiştir. Aşama 5'te bu yapı `placements.add/remove/update` ve `groups.update` toplu komutlarıyla genişletilmiştir. Komutlar yalnız etkilenen yerleşim/grup deltalarını taşır; tam proje anlık görüntüsü saklamaz. Geçmiş 100 komutla sınırlıdır ve toplu işlem tek geri alma adımıdır.
+Aşama 3'te terslenebilir komut yaklaşımı seçilmiştir. Aşama 5'te bu yapı `placements.add/remove/update` ve `groups.update` toplu komutlarıyla genişletilmiştir. Aşama 6 motif eklemesi `placements.add`, tasarım değiştirme işlemi ise önce/sonra belge durumunu taşıyan tek `document.replace` komutudur. Komutlar yalnız gerekli deltayı taşır; geçmiş 100 komutla sınırlıdır ve her motif uygulaması tek geri alma adımıdır.
 
 ## 7. Geometri çekirdeği API taslağı
 
@@ -153,12 +157,30 @@ Aşama 3'te motif kılavuzu görseldir; bu nedenle `MOTIF_BOUNDS_EXCEEDED` manue
 - JPEG yalnız sunum çıktısıdır; tekrar içe aktarılıp düzenlenebilir veri sayılmaz.
 - Aşama 4 şeması `1.0` sürümünü, proje kimliği/adı/tarihleri, motif ölçülerini, minimum aralığı, kullanılan malzeme kayıtlarını ve mm yerleşimlerini taşır.
 - Aşama 5 şeması `1.1` sürümünde grup üyeliklerini ve normal/hızlı klavye taşıma adımlarını ekler. `1.0` dosyaları boş grup ve `0,5/5 mm` varsayılanlarıyla güncel modele taşınır.
+- Aşama 6 üretim ayarları geçici araç durumudur; şemaya eklenmez. Uygulanan motif normal `Placement[]` olduğundan JSON sürümü `1.1` kalır ve Aşama 4/5 dosyaları aynı doğrulamayla açılır.
 - İçe aktarılan malzeme kimliği yerel katalogda farklı tanımla bulunursa yerel kayıt ezilmez; proje malzemesi yeni kimlikle eklenir ve bütün yerleşim başvuruları birlikte eşlenir.
 - Kaydedilmemiş durum, tarih alanlarını dışarıda bırakan kanonik proje içeriği parmak izinin son başarılı kayıt/açma anıyla karşılaştırılmasından türetilir.
 - Görsel çıktı Konva ekran görüntüsü değildir; kanonik mm geometrileri seçilen alan ve DPI üzerinden ayrı Canvas'a çizilir.
 - Aşama 2'de malzeme önizlemesi şekil, renk ve mm oranından üretilir; raster malzeme görseli saklanmaz. İleride görsel yükleme gereksinimi doğrulanırsa dosya türü/boyutu ve proje paketleme politikası ayrıca kararlaştırılır.
 
-## 9. Backend sınırı (Aşama 6+)
+## 9.1. Aşama 6 motif üretim hattı
+
+```text
+Tür/ölçü/merkez/malzeme/oran/aralık/simetri/tekrar/yoğunluk/seed
+  → katı parametre doğrulaması ve yaklaşık kapasite
+  → seed tabanlı desen adayları
+  → koordinat + açı simetri dönüşümü ve merkez tekilleştirme
+  → üretim dikdörtgeni sınırı
+  → hücre tabanlı yakın aday ön elemesi
+  → mevcut kesin geometri/mesafe kuralları
+  → geçici placement önizlemesi + gerçek nesne raporu
+  → uygulamada bütün aday projenin yeniden doğrulanması
+  → tek atomik editör komutu
+```
+
+Üretici React, Konva, DOM ve ağ bilmez. Seed için sabit bir karma ve yerel PRNG kullanır. Hücre indeksi yalnız aday kümesini azaltır; kesin karar `geometriesOverlap` ve `distanceBetweenGeometries` fonksiyonlarından gelir. Başarılı çıktı limiti 5.000, aday limiti 40.000 ve çalışma bütçesi 1.000 ms'dir. Süre/limit aşımı kısmi placement sonucu döndürmez.
+
+## 9.2. Gelecek backend sınırı (Aşama 6 kapsamında değil)
 
 Planlanan FastAPI sorumlulukları:
 
@@ -175,9 +197,10 @@ Backend hiçbir zaman istemcinin geometri doğrulamasını atlama yetkisi vermez
 1. Önce AABB ile aday çiftleri elenir.
 2. Küçük sahnelerde doğrusal tarama basitlik için yeterlidir.
 3. Aşama 5 tam-proje doğrulaması AABB'ye göre sıralı tarama kullanır; yalnız X aralığı yakın nesneler etkin kümede kesin teste girer. 5.000 uzak nesneli tam proje ve alan seçimi test edilmiştir.
-4. Konva yerleşim düğümleri memoize bir grupta tutulur; imleç önizlemesi güncellenirken bütün yerleşim listesi yeniden oluşturulmaz.
-5. Cetvel/ızgara görünüm ölçeğine göre seyreltilir; model nesnesi olarak saklanmaz.
-6. Performans hedefi sentetik 1.000 ve 5.000 nesne senaryolarıyla ölçülür.
+4. Aşama 6 motif adayları, en büyük seçili malzeme çapına göre hücrelenen uzamsal indeksle yalnız yakın kabul edilmiş yerleşimlere karşı kesin sınanır.
+5. Konva yerleşim düğümleri memoize bir grupta tutulur; motif önizlemesi ayrı, etkileşimsiz katmandır ve kalıcı yerleşim dizisini değiştirmez.
+6. Cetvel/ızgara görünüm ölçeğine göre seyreltilir; model nesnesi olarak saklanmaz.
+7. Performans hedefi sentetik 1.000 ve 5.000 nesne senaryolarıyla ölçülür.
 
 ## 11. Test stratejisi
 
@@ -199,7 +222,7 @@ Backend hiçbir zaman istemcinin geometri doğrulamasını atlama yetkisi vermez
 
 ## 13. Dağıtım evrimi
 
-- Aşama 1–5: Statik frontend, yerel JSON/JPEG.
-- Aşama 6–7: Ayrı dağıtılan FastAPI servisi ve yapılandırılabilir API tabanı.
+- Aşama 1–6: Statik frontend, yerel JSON/JPEG ve yerel deterministik motif üretimi.
+- Aşama 7: Referans görsel araştırması; harici servis gerekiyorsa ayrıca onaylanan FastAPI sınırı.
 - Aşama 8: Kimlik, proje depolama ve ticari servisler; bu ihtiyaçlar kanıtlanmadan önce altyapı eklenmez.
 

@@ -7,6 +7,7 @@ vi.mock("../features/workspace/DesignWorkspace", () => ({
   DesignWorkspace: ({
     motif,
     placements,
+    previewPlacements = [],
     notice,
     projectName,
     isDirty,
@@ -15,6 +16,7 @@ vi.mock("../features/workspace/DesignWorkspace", () => ({
   }: {
     motif: { widthMm: number; heightMm: number };
     placements: Array<{ id: string; xMm: number; yMm: number; rotationDeg: number }>;
+    previewPlacements?: Array<{ id: string }>;
     notice: string | null;
     projectName: string;
     isDirty: boolean;
@@ -31,6 +33,7 @@ vi.mock("../features/workspace/DesignWorkspace", () => ({
       <output data-testid="placement-state">
         {placements.map((item) => `${item.xMm},${item.yMm},${item.rotationDeg}`).join("|")}
       </output>
+      <output data-testid="preview-count">{previewPlacements.length}</output>
       <output data-testid="editor-notice">{notice}</output>
     </div>
   ),
@@ -43,7 +46,7 @@ describe("temel uygulama kabuğu", () => {
     expect(screen.getByRole("heading", { name: "Malzeme kütüphanesi" })).toBeInTheDocument();
     expect(await screen.findByTestId("design-workspace")).toHaveTextContent("Motif 200 × 250 mm");
     expect(screen.getByRole("heading", { name: "Tasarım özellikleri" })).toBeInTheDocument();
-    expect(screen.getByText("Aşama 5")).toBeInTheDocument();
+    expect(screen.getByText("Aşama 6")).toBeInTheDocument();
   });
 
   it("proje işlemlerini etkin, geçmiş işlemlerini duruma bağlı tutar", () => {
@@ -303,6 +306,44 @@ describe("temel uygulama kabuğu", () => {
     expect(screen.getByTestId("placement-state")).toHaveTextContent("0,0,0|10,10,0");
     fireEvent.keyDown(window, { key: "d", ctrlKey: true });
     expect(screen.getByTestId("placement-state")).toHaveTextContent("0,0,0|10,10,0|20,20,0");
+  });
+
+  it("motif önizlemesini projeyi değiştirmeden gösterir ve tek işlemle uygular", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Motif oluştur" }));
+    expect(screen.getByRole("dialog", { name: "Motif oluştur" })).toBeInTheDocument();
+    await user.clear(screen.getByLabelText("Üretim motif genişliği"));
+    await user.type(screen.getByLabelText("Üretim motif genişliği"), "50");
+    await user.clear(screen.getByLabelText("Üretim motif yüksekliği"));
+    await user.type(screen.getByLabelText("Üretim motif yüksekliği"), "50");
+    await user.click(screen.getByRole("button", { name: "Önizleme üret" }));
+
+    expect(await screen.findByRole("heading", { name: "Üretim raporu" })).toBeInTheDocument();
+    expect(screen.getByTestId("placement-state")).toBeEmptyDOMElement();
+    expect(Number(screen.getByTestId("preview-count").textContent)).toBeGreaterThan(0);
+    await user.click(screen.getByRole("button", { name: "Motifi uygula" }));
+    expect(screen.getByTestId("placement-state")).not.toBeEmptyDOMElement();
+    expect(screen.queryByRole("dialog", { name: "Motif oluştur" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Geri al" }));
+    expect(screen.getByTestId("placement-state")).toBeEmptyDOMElement();
+  });
+
+  it("kaydedilmemiş tasarımı motif ile değiştirmeden önce açık onay alır", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Kum boncuk ile yerleştirme moduna geç" }));
+    await user.click(await screen.findByRole("button", { name: "Orijine yerleştir" }));
+    await user.click(screen.getByRole("button", { name: "Motif oluştur" }));
+    await user.click(screen.getByRole("button", { name: "Önizleme üret" }));
+    await screen.findByRole("heading", { name: "Üretim raporu" });
+    await user.click(screen.getByRole("radio", { name: "Mevcut tasarımı değiştir" }));
+    await user.click(screen.getByRole("button", { name: "Motifi uygula" }));
+
+    expect(screen.getByRole("alertdialog", { name: "Mevcut tasarım değiştirilsin mi?" })).toBeInTheDocument();
+    expect(screen.getByTestId("placement-state")).toHaveTextContent("0,0,0");
+    await user.click(screen.getByRole("button", { name: "Tasarımla değiştir" }));
+    expect(screen.getByTestId("placement-state")).not.toHaveTextContent(/^0,0,0$/);
   });
 });
 

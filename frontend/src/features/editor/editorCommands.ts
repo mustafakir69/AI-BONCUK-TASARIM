@@ -13,6 +13,7 @@ export type EditorCommand =
   | { type: "placements.add"; placements: Placement[]; groups: PlacementGroup[] }
   | { type: "placements.remove"; placements: Placement[]; groupsBefore: PlacementGroup[]; groupsAfter: PlacementGroup[] }
   | { type: "placements.update"; before: Placement[]; after: Placement[] }
+  | { type: "document.replace"; before: EditorDocumentState; after: EditorDocumentState }
   | { type: "groups.update"; before: PlacementGroup[]; after: PlacementGroup[] };
 
 function replacePlacements(
@@ -59,6 +60,12 @@ export function applyEditorCommand(
   if (command.type === "placements.update") {
     return { ...state, placements: replacePlacements(state.placements, command.after) };
   }
+  if (command.type === "document.replace") {
+    return {
+      placements: command.after.placements.map((placement) => ({ ...placement })),
+      groups: cloneGroups(command.after.groups),
+    };
+  }
   return { ...state, groups: cloneGroups(command.after) };
 }
 
@@ -94,6 +101,12 @@ export function revertEditorCommand(
   }
   if (command.type === "placements.update") {
     return { ...state, placements: replacePlacements(state.placements, command.before) };
+  }
+  if (command.type === "document.replace") {
+    return {
+      placements: command.before.placements.map((placement) => ({ ...placement })),
+      groups: cloneGroups(command.before.groups),
+    };
   }
   return { ...state, groups: cloneGroups(command.before) };
 }

@@ -208,6 +208,12 @@ function countMaterials(placements: Placement[]): Map<MaterialId, number> {
 
 Gerekirse dışa aktarımda kolaylık için türetilmiş özet üretilebilir; proje açılırken her zaman yeniden hesaplanır.
 
+### Aşama 6 üretim sonuçları
+
+Motif üreticisi de normal `Placement` nesneleri oluşturur. Üretilen nesne genişlik, yükseklik, şekil, katalog rengi, üretim türü veya seed kopyalamaz; fiziksel geometri yine bağlı `Material` kaydından okunur. Önizleme kimlikleri geçicidir, uygulama sırasında proje genelinde benzersiz `PlacementId` değerleri üretilir.
+
+Motif türü, yoğunluk, simetri, göreli malzeme oranı ve seed Aşama 6'da geçici araç ayarıdır. Bunlar tekrar üretilebilir tarif olarak saklanmadığından proje şeması `1.1` kalır. Uygulanmış placement nesneleri mevcut JSON kaydet/aç akışında eksiksiz korunur.
+
 ## 11. Şema sürümleme
 
 - `schemaVersion` anlamsal `major.minor` biçimindedir.

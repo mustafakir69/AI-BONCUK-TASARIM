@@ -43,6 +43,7 @@ interface InspectorPanelProps {
   onUngroupSelected(): boolean;
   onAlignSelected(operation: AlignmentOperation): boolean;
   onKeyboardStepsChange(normalMm: number, shiftedMm: number): boolean;
+  onOpenMotifGenerator(): void;
 }
 
 function parseDecimal(value: string): number {
@@ -319,6 +320,10 @@ export function InspectorPanel(props: InspectorPanelProps) {
         </div>
         <MotifSettings {...props} />
         <MinimumGapForm key={props.minimumGapMm} minimumGapMm={props.minimumGapMm} onChange={props.onMinimumGapChange} />
+        <div className="motif-generator-launch">
+          <div><strong>Akıllı motif motoru</strong><span>Seçili gerçek malzemelerle deterministik motif üretin.</span></div>
+          <button className="primary-button" onClick={props.onOpenMotifGenerator} type="button">Motif oluştur</button>
+        </div>
       </section>
 
       <AdvancedEditingTools key={`${props.keyboardStepMm}:${props.keyboardShiftStepMm}`} {...props} />

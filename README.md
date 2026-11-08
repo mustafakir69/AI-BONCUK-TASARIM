@@ -6,7 +6,7 @@ Temel ilke şudur: Sistem yalnızca güzel bir görüntü değil, gerçek fiziks
 
 ## Proje durumu
 
-**Aşama 5 — Gelişmiş boncuk düzenleme araçları tamamlandı.** Manuel editör; çoklu/alan seçimi, atomik toplu taşıma ve döndürme, kopyalama/çoğaltma, kalıcı gruplar, geometrik hizalama/dağıtma ve özelleştirilebilir klavye taşımasıyla çalışmaktadır. Aşama 6 için kullanıcı onayı beklenmektedir.
+**Aşama 6 — Akıllı motif üretim motoru tamamlandı.** Uygulama; seçili gerçek malzemelerden seed tabanlı altı geometrik motif, beş simetri modu, projeyi değiştirmeyen önizleme, gerçek üretim raporu ve atomik uygulama sunmaktadır. Gerçek AI servisi veya backend eklenmemiştir; Aşama 7 için kullanıcı onayı beklenmektedir.
 
 ## Planlanan teknoloji seçimi
 
@@ -20,7 +20,7 @@ Temel ilke şudur: Sistem yalnızca güzel bir görüntü değil, gerçek fiziks
 | Gelecek API | Python + FastAPI | Görüntü işleme ve yapay zekâ ekosistemiyle uyumlu, açık şemalı API geliştirme |
 | Kalıcı proje | Sürümlü JSON | Düzenlenebilir verinin taşınabilir, okunabilir ve doğrulanabilir olması |
 
-Python/FastAPI ilk manuel editör için gerekli değildir ve Aşama 6'dan önce çalışma zamanına eklenmeyecektir. Konva koordinatları ekran içindir; alan modelinin tek fiziksel birimi milimetredir.
+Python/FastAPI manuel editör ve deterministik Aşama 6 motoru için gerekli değildir; çalışma zamanına eklenmemiştir. Konva koordinatları ekran içindir; alan modelinin tek fiziksel birimi milimetredir.
 
 ## Klasör yapısı
 
@@ -51,7 +51,7 @@ Python/FastAPI ilk manuel editör için gerekli değildir ve Aşama 6'dan önce 
     └── tests/
 ```
 
-Frontend uygulaması bu katman sınırlarına göre kurulmuştur. Backend dizini, Aşama 6'dan önce uygulama kodu içermez.
+Frontend uygulaması bu katman sınırlarına göre kurulmuştur. Backend dizini Aşama 6'da da uygulama kodu içermez.
 
 ## Belgeler
 
@@ -115,9 +115,14 @@ npm run preview
 - Tek undo/redo adımlı toplu taşıma, ortak merkezde döndürme, geometrik hizalama ve eşit dağıtma
 - Ctrl+C/V/D, hassas ofset/tekrar çoğaltma, atomik çakışma kontrolü ve işlem limitleri
 - JSON `1.1` içinde kalıcı gruplar ve klavye adımları; `1.0` projeleri için sıkı geriye uyumluluk
+- Düz çizgi, halka, spiral, dalga, çiçek ve tekrarlı geometrik desen için deterministik yerel motif motoru
+- Seçili katalog malzemeleri, göreli oran, yoğunluk, seed ve yatay/dikey/dört yönlü/radyal simetri ayarları
+- Yaklaşık üretim tahmini, geçici çalışma alanı önizlemesi ve gerçek placement nesnelerinden türetilen rapor
+- Mevcut tasarıma atomik ekleme veya kaydedilmemiş değişiklik onaylı değiştirme; tek undo/redo adımı
+- 5.000 sonuç, 40.000 aday ve 1.000 ms üretim güvenlik sınırları
 - Birim ve bileşen testleri, sıkı TypeScript, lint ve üretim derlemesi
 
-## Aşama 6'ya geçiş
+## Aşama 7'ye geçiş
 
-Aşama 6 planı kullanıcı onayıyla ayrıca netleştirilecektir. Yapay zekâ entegrasyonu Aşama 5 kapsamında yapılmamıştır.
+Aşama 7 referans görsel analizi kullanıcı onayı olmadan başlatılmayacaktır. Aşama 6 gerçek LLM, bulut AI sağlayıcısı, Python/FastAPI backend veya görsel analizi içermez.
 

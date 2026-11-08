@@ -254,5 +254,55 @@ describe("manuel tasarım editörü durumu", () => {
     expect(result.current.placements).toHaveLength(1);
     expect(result.current.notice).toContain("sınırlıdır");
   });
+
+  it("üretilen motifi tek komutla ekler, geri alır ve yineler", () => {
+    const { result } = renderHook(() => useDesignEditor(INITIAL_MATERIALS));
+    act(() => result.current.replaceProject([
+      { id: "existing", materialId: "mat-pearl", xMm: -20, yMm: 0, rotationDeg: 0 },
+    ], 0));
+    const generated = [
+      { id: "preview-1", materialId: "mat-seed-bead", xMm: 10, yMm: 0, rotationDeg: 15 },
+      { id: "preview-2", materialId: "mat-seed-bead", xMm: 20, yMm: 0, rotationDeg: 30 },
+    ];
+    act(() => { expect(result.current.applyGeneratedPlacements(generated, "append")).toBe(true); });
+    expect(result.current.placements).toHaveLength(3);
+    expect(result.current.placements.slice(1).map(({ materialId, xMm, yMm, rotationDeg }) => ({ materialId, xMm, yMm, rotationDeg })))
+      .toEqual(generated.map(({ materialId, xMm, yMm, rotationDeg }) => ({ materialId, xMm, yMm, rotationDeg })));
+    act(() => result.current.undo());
+    expect(result.current.placements.map((item) => item.id)).toEqual(["existing"]);
+    act(() => result.current.redo());
+    expect(result.current.placements).toHaveLength(3);
+  });
+
+  it("üretilen motif ile mevcut tasarımı atomik değiştirir ve undo ile geri getirir", () => {
+    const { result } = renderHook(() => useDesignEditor(INITIAL_MATERIALS));
+    act(() => result.current.replaceProject([
+      { id: "p1", materialId: "mat-pearl", xMm: -10, yMm: 0, rotationDeg: 0 },
+      { id: "p2", materialId: "mat-pearl", xMm: 10, yMm: 0, rotationDeg: 0 },
+    ], 0, [{ id: "group", placementIds: ["p1", "p2"] }]));
+    act(() => { expect(result.current.applyGeneratedPlacements([
+      { id: "preview", materialId: "mat-seed-bead", xMm: 0, yMm: 20, rotationDeg: 45 },
+    ], "replace")).toBe(true); });
+    expect(result.current.placements).toHaveLength(1);
+    expect(result.current.groups).toEqual([]);
+    act(() => result.current.undo());
+    expect(result.current.placements.map((item) => item.id)).toEqual(["p1", "p2"]);
+    expect(result.current.groups).toEqual([{ id: "group", placementIds: ["p1", "p2"] }]);
+  });
+
+  it("mevcut yerleşimle çakışan motif eklemesini kısmi değişiklik yapmadan reddeder", () => {
+    const { result } = renderHook(() => useDesignEditor(INITIAL_MATERIALS));
+    act(() => result.current.replaceProject([
+      { id: "existing", materialId: "mat-pearl", xMm: 0, yMm: 0, rotationDeg: 0 },
+    ], 0));
+    act(() => { expect(result.current.applyGeneratedPlacements([
+      { id: "preview-1", materialId: "mat-pearl", xMm: 0, yMm: 0, rotationDeg: 0 },
+      { id: "preview-2", materialId: "mat-pearl", xMm: 20, yMm: 0, rotationDeg: 0 },
+    ], "append")).toBe(false); });
+    expect(result.current.placements).toEqual([
+      { id: "existing", materialId: "mat-pearl", xMm: 0, yMm: 0, rotationDeg: 0 },
+    ]);
+    expect(result.current.canUndo).toBe(false);
+  });
 });
 

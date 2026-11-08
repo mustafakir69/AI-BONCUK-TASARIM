@@ -6,7 +6,43 @@ Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) yaklaşımın�
 
 ### Planlanan
 
-- Aşama 6: Kullanıcı onayıyla belirlenecek sonraki kapsam; yapay zekâ henüz eklenmedi
+- Aşama 7: Kullanıcı onayı olmadan başlanmayacak referans görsel analizi
+
+## [0.7.0] — 2026-11-09
+
+### Eklendi
+
+- Düz çizgi, halka, spiral, dalga, çiçek ve tekrarlı geometrik desen üreten saf TypeScript motif motoru
+- Seed tabanlı deterministik örnekleme, yoğunluk ve göreli malzeme kullanım oranları
+- Yatay/dikey/dört yönlü ayna ile 3/4/5/6/8/12 tekrarlı radyal simetri
+- Motif türü, fiziksel ölçü, negatif/pozitif merkez, malzeme, aralık, simetri, tekrar, yoğunluk ve seed kontrollerini içeren Türkçe responsive üretim penceresi
+- Kesin olmayan boncuk sayısı/uygunluk tahmini ve gerçek yerleşimlerden türetilen üretim raporu
+- Projeyi değiştirmeyen etkileşimsiz Konva önizlemesi
+- Mevcut tasarıma ekleme veya açık onayla tasarımı değiştirme akışı
+
+### Değiştirildi
+
+- Editör komut sistemi atomik `document.replace` komutuyla genişletildi; motif uygulaması tek undo/redo adımı oldu
+- Uygulama aşama göstergesi Aşama 6, paket sürümü `0.7.0` oldu
+- Mimari ve yol haritası Aşama 6'nın backend/LLM içermeyen deterministik kapsamına göre güncellendi
+
+### Güvenlik ve performans
+
+- Üretim adayları gerçek döndürülmüş geometri, motif sınırı, minimum aralık ve pul dış disk politikasıyla doğrulanır
+- Hücre tabanlı uzamsal ön eleme yalnız yakın adayları kesin teste gönderir
+- Üretim 5.000 kabul edilmiş placement, 40.000 aday ve 1.000 ms hesap bütçesiyle sınırlıdır
+- Uygulama sırasında bütün aday proje yeniden doğrulanır; tek hata bütün işlemi reddeder ve mevcut tasarım korunur
+
+### Doğrulandı
+
+- TypeScript ve ESLint başarılı
+- 14 dosyada 140 otomatik test başarılı
+- Altı motif türü, seed tekrarlanabilirliği, farklı seed, seçili malzeme, oran, simetri/açı, sınır/aralık, negatif merkez, önizleme, atomiklik, undo/redo, JSON ve büyük motif senaryoları başarılı
+- Vite üretim derlemesi, yerel HTTP 200 duman kontrolü ve güvenlik denetimi başarılı; 0 açık bulundu
+
+### Kapsam
+
+- Gerçek LLM/bulut AI, Python/FastAPI backend, referans görsel analizi, commit/push ve yayınlama eklenmemiştir.
 
 ## [0.6.0] — 2026-11-08
 

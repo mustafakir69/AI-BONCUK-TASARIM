@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { createExportPlan } from "../domain/export";
 import { updateMaterial, type MaterialDraft } from "../domain/material";
 import { createMaterialReportCsv } from "../domain/materialReport";
@@ -15,12 +15,14 @@ import {
 import { useDesignEditor } from "../features/editor/useDesignEditor";
 import { ExportDialog, type ExportRequest } from "../features/files/ExportDialog";
 import { ProjectConfirmDialog } from "../features/files/ProjectConfirmDialog";
+import { MotifGeneratorDialog, type MotifApplicationMode } from "../features/generator/MotifGeneratorDialog";
 import { InspectorPanel } from "../features/inspector/InspectorPanel";
 import { MaterialLibrary } from "../features/materials/MaterialLibrary";
 import { useMaterialLibrary } from "../features/materials/useMaterialLibrary";
 import { Toolbar } from "../features/toolbar/Toolbar";
 import { downloadBlob, downloadText, readTextFile, safeFilename } from "../infrastructure/browserFiles";
 import { renderProjectImage } from "../infrastructure/imageExport";
+import type { Placement } from "../domain/placement";
 
 const DesignWorkspace = lazy(async () => {
   const module = await import("../features/workspace/DesignWorkspace");
@@ -50,9 +52,12 @@ export function App() {
   const currentFingerprint = useMemo(() => projectContentFingerprint(currentContent), [currentContent]);
   const [savedFingerprint, setSavedFingerprint] = useState(currentFingerprint);
   const [projectNotice, setProjectNotice] = useState<string>();
-  const [confirmAction, setConfirmAction] = useState<"new" | "open" | null>(null);
+  const [confirmAction, setConfirmAction] = useState<"new" | "open" | "replace-motif" | null>(null);
   const [pendingImport, setPendingImport] = useState<ResolvedProjectImport>();
+  const [pendingMotifReplace, setPendingMotifReplace] = useState<Placement[]>();
   const [exportOpen, setExportOpen] = useState(false);
+  const [generatorOpen, setGeneratorOpen] = useState(false);
+  const [motifPreview, setMotifPreview] = useState<Placement[]>([]);
   const isDirty = currentFingerprint !== savedFingerprint;
   const {
     cancelInteraction, copySelected, deleteSelected, duplicateSelected, groupSelected,
@@ -148,6 +153,8 @@ export function App() {
       materials: materialLibrary.materials, placements: [], groups: [],
     }));
     setProjectNotice("Yeni proje oluşturuldu; malzeme kataloğu korundu.");
+    setGeneratorOpen(false);
+    setMotifPreview([]);
     setConfirmAction(null);
   }
 
@@ -189,6 +196,8 @@ export function App() {
     setProjectNotice(resolved.conflictCount > 0
       ? `Proje açıldı; ${resolved.conflictCount} malzeme kimliği yerel kaydı ezmeden yeniden eşlendi.`
       : "Proje doğrulandı ve açıldı.");
+    setGeneratorOpen(false);
+    setMotifPreview([]);
     setPendingImport(undefined);
     setConfirmAction(null);
   }
@@ -231,6 +240,38 @@ export function App() {
     setProjectNotice("Malzeme raporu CSV olarak indirildi.");
   }
 
+  const handleMotifPreview = useCallback((placements: readonly Placement[]) => {
+    setMotifPreview(placements.map((placement) => ({ ...placement })));
+  }, []);
+
+  function closeMotifGenerator(): void {
+    setGeneratorOpen(false);
+    setMotifPreview([]);
+    setPendingMotifReplace(undefined);
+  }
+
+  function commitGeneratedMotif(placements: readonly Placement[], mode: MotifApplicationMode): boolean {
+    const applied = editor.applyGeneratedPlacements(placements, mode);
+    if (applied) {
+      setGeneratorOpen(false);
+      setMotifPreview([]);
+      setPendingMotifReplace(undefined);
+      setProjectNotice(mode === "append"
+        ? `${placements.length} boncukluk motif mevcut tasarıma eklendi.`
+        : `${placements.length} boncukluk motif mevcut tasarımın yerine uygulandı.`);
+    }
+    return applied;
+  }
+
+  function handleMotifApply(placements: readonly Placement[], mode: MotifApplicationMode): void {
+    if (mode === "replace" && isDirty) {
+      setPendingMotifReplace(placements.map((placement) => ({ ...placement })));
+      setConfirmAction("replace-motif");
+      return;
+    }
+    commitGeneratedMotif(placements, mode);
+  }
+
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -255,9 +296,9 @@ export function App() {
           onUndo={editor.undo}
         />
 
-        <div className="stage-badge" title="Gelişmiş boncuk düzenleme araçları">
+        <div className="stage-badge" title="Deterministik akıllı motif üretim motoru">
           <span />
-          Aşama 5
+          Aşama 6
         </div>
       </header>
 
@@ -304,6 +345,7 @@ export function App() {
             onRotateSelected={editor.rotateSelected}
             onSelectPlacement={editor.selectPlacement}
             placements={editor.placements}
+            previewPlacements={motifPreview}
             projectName={projectMeta.name}
             selectedIds={editor.selectedIds}
             validateCandidate={editor.validateCandidate}
@@ -330,6 +372,7 @@ export function App() {
           onMinimumGapChange={editor.setMinimumGap}
           onMotifChange={setMotif}
           onMotifGuideVisibleChange={setMotifGuideVisible}
+          onOpenMotifGenerator={() => setGeneratorOpen(true)}
           onPlacementChange={editor.updatePlacement}
           onPasteClipboard={editor.pasteClipboard}
           onRotateSelected={editor.rotateSelected}
@@ -350,13 +393,32 @@ export function App() {
           placements={editor.placements}
         />
       ) : null}
+      {generatorOpen ? (
+        <MotifGeneratorDialog
+          materials={materialLibrary.materials}
+          motif={motif}
+          onApply={handleMotifApply}
+          onClose={closeMotifGenerator}
+          onPreview={handleMotifPreview}
+          projectMinimumGapMm={editor.minimumGapMm}
+        />
+      ) : null}
       {confirmAction ? (
         <ProjectConfirmDialog
-          confirmLabel={confirmAction === "new" ? "Kaydetmeden yeni proje" : "Kaydetmeden aç"}
-          message="Geçerli tasarımda kaydedilmemiş değişiklikler var. Devam ederseniz bu değişiklikler kaybolur."
-          onCancel={() => { setConfirmAction(null); setPendingImport(undefined); }}
-          onConfirm={() => confirmAction === "new" ? createNewProject() : pendingImport && applyImport(pendingImport)}
-          title={confirmAction === "new" ? "Yeni proje oluşturulsun mu?" : "Seçilen proje açılsın mı?"}
+          confirmLabel={confirmAction === "new" ? "Kaydetmeden yeni proje" : confirmAction === "open" ? "Kaydetmeden aç" : "Tasarımla değiştir"}
+          message={confirmAction === "replace-motif"
+            ? "Geçerli tasarımda kaydedilmemiş değişiklikler var. Motifi uygularsanız mevcut boncuklar ve gruplar tek işlemde değiştirilecek."
+            : "Geçerli tasarımda kaydedilmemiş değişiklikler var. Devam ederseniz bu değişiklikler kaybolur."}
+          onCancel={() => { setConfirmAction(null); setPendingImport(undefined); setPendingMotifReplace(undefined); }}
+          onConfirm={() => {
+            if (confirmAction === "new") createNewProject();
+            else if (confirmAction === "open" && pendingImport) applyImport(pendingImport);
+            else if (confirmAction === "replace-motif" && pendingMotifReplace) {
+              commitGeneratedMotif(pendingMotifReplace, "replace");
+              setConfirmAction(null);
+            }
+          }}
+          title={confirmAction === "new" ? "Yeni proje oluşturulsun mu?" : confirmAction === "open" ? "Seçilen proje açılsın mı?" : "Mevcut tasarım değiştirilsin mi?"}
         />
       ) : null}
     </div>

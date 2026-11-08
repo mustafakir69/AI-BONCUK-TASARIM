@@ -130,9 +130,25 @@ Görevler:
 
 **Doğrulama:** Seçim, toplu komut, grup, hizalama, JSON geçişi ve 5.000 nesneli performans testleri.
 
-## Aşama 6 — Yazılı komutla yapay zekâ
+## Aşama 6 — Akıllı motif üretim motoru
 
-Kullanıcı onayı alınmadan başlanmayacaktır. Önceki sağlayıcı/şema planı bu aşamaya ertelenmiştir.
+**Amaç:** Gerçek AI servisi veya backend olmadan, seçili katalog malzemelerinden deterministik ve düzenlenebilir geometrik motifler üretmek.
+
+Görevler:
+
+- [x] P6.1 Altı geometrik motif türü ve seed tabanlı saf üretim çekirdeği
+- [x] P6.2 Seçili malzemeler ve göreli kullanım oranları
+- [x] P6.3 Yatay, dikey, dört yönlü ve 3/4/5/6/8/12 tekrarlı radyal simetri
+- [x] P6.4 Motif sınırı, minimum aralık ve kesin geometri doğrulaması
+- [x] P6.5 Uzamsal hücre ön elemesi ile nesne/adım/süre güvenlik sınırları
+- [x] P6.6 Projeyi değiştirmeyen çalışma alanı önizlemesi ve gerçek üretim raporu
+- [x] P6.7 Mevcut tasarıma ekleme veya onaylı değiştirme; atomik tek undo/redo adımı
+- [x] P6.8 JSON `1.1` placement uyumluluğu ve eski `1.0`/`1.1` projelerin korunması
+- [x] P6.9 Responsive Türkçe üretim penceresi ve otomatik testler
+
+**Çıkış ölçütü:** Aynı seed ve aynı parametreler aynı yerleşimleri üretir; önizleme projeyi değiştirmez; uygulama bütün geometri kurallarını yeniden doğrular ve kısmi sonuç bırakmaz.
+
+**Doğrulama:** Altı motif türü, simetri/açı, seçili malzeme, sınır/aralık, negatif koordinat, atomiklik, undo/redo, JSON turu ve büyük motif testleri.
 
 ## Aşama 7 — Referans görsel analizi
 

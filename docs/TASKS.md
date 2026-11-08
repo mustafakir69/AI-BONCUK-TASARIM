@@ -4,7 +4,7 @@ Durum işaretleri: `[ ]` yapılacak, `[~]` devam ediyor, `[x]` tamamlandı, `[!]
 
 ## Mevcut aşama
 
-**Aşama 5 — Gelişmiş boncuk düzenleme araçları: tamamlandı (2026-11-08).**
+**Aşama 6 — Akıllı motif üretim motoru: tamamlandı (2026-11-09).**
 
 ### Tamamlanan işler
 
@@ -249,13 +249,68 @@ Kullanıcı onayı 2026-11-08 tarihinde alındı.
 - [x] Yerel Vite sunucusu — HTTP 200
 - [!] Tarayıcı görsel QA yüzeyi bu çalışma oturumunda kullanılamadı; responsive CSS, bileşen testleri, derleme ve HTTP duman kontrolüyle doğrulandı
 
+## Aşama 6 — Tamamlanan işler
+
+Kullanıcı onayı 2026-11-09 tarihinde alındı.
+
+- [x] P6.1 React/Konva'dan bağımsız saf motif üretim veri modeli ve parametre doğrulaması
+- [x] P6.2 Düz çizgi, halka, spiral, dalga, çiçek ve tekrarlı geometrik desen algoritmaları
+- [x] P6.3 Seed tabanlı PRNG ile aynı girdide aynı geometrik sonuç
+- [x] P6.4 Seçili katalog malzemeleri ve pozitif göreli kullanım oranları
+- [x] P6.5 Yatay/dikey/dört yönlü ayna ve 3/4/5/6/8/12 yönlü radyal simetri
+- [x] P6.6 Simetride koordinat/açı dönüşümü ve aynı merkez adaylarının tekilleştirilmesi
+- [x] P6.7 Gerçek döndürülmüş geometriyle üretim sınırı, çakışma ve minimum aralık kontrolü
+- [x] P6.8 Hücre tabanlı uzamsal ön eleme ve 5.000/40.000/1.000 ms güvenlik limitleri
+- [x] P6.9 Tahmini boncuk sayısı, uygunluk uyarısı ve tahminin kesin olmadığının gösterilmesi
+- [x] P6.10 Motif türü/ölçü/merkez/malzeme/oran/aralık/simetri/tekrar/yoğunluk/seed arayüzü
+- [x] P6.11 Projeyi değiştirmeyen, çalışma alanında gerçek placement geometrisiyle önizleme
+- [x] P6.12 Gerçek sayım, ölçü, simetri, aralık, kabul/red ve uyarı üretim raporu
+- [x] P6.13 Mevcut tasarıma ekleme veya kaydedilmemiş değişiklik onaylı tasarım değiştirme
+- [x] P6.14 Uygulamada yeniden tam-proje doğrulaması ve kısmi sonuç bırakmayan atomik işlem
+- [x] P6.15 Motif uygulamasını tek undo/redo komutuna bağlamak
+- [x] P6.16 JSON `1.1` placement uyumluluğu ve `1.0`/`1.1` geriye uyumluluğunu korumak
+- [x] P6.17 Responsive Türkçe motif üretim penceresi ve çalışma alanı önizleme durumu
+- [x] P6.18 Alan, bileşen, editör ve uygulama entegrasyon testlerini tamamlamak
+
+### Aşama 6 kabul ölçütleri
+
+- [x] Altı motif türü bağımsız, düzenlenebilir placement nesneleri üretir
+- [x] Aynı seed aynı sonucu; farklı seed uygun yoğunlukta farklı sonucu verir
+- [x] Yalnız seçilen katalog malzemeleri kullanılır; ölçü/şekil/renk değiştirilmez
+- [x] Bütün kabul edilmiş boncuklar üretim sınırı, çakışma ve minimum aralık kurallarını geçer
+- [x] Simetri koordinat ve açıları doğru dönüştürür; aynı nokta çoğaltılmaz
+- [x] Negatif motif merkezi pan/zoom'dan bağımsız fiziksel koordinat olarak çalışır
+- [x] Önizleme projeyi, geçmişi ve kaydedilmemiş durumunu değiştirmez
+- [x] Ekleme/değiştirme atomiktir, uygulamada yeniden doğrulanır ve tek undo/redo adımıdır
+- [x] Üretim raporu yalnız gerçek kabul edilmiş placement nesnelerinden türetilir
+- [x] Eski proje dosyaları açılır; yeni motifler mevcut JSON şemasında saklanır
+- [x] Gerçek AI servisi, Python/FastAPI backend ve Aşama 7 kapsamı eklenmemiştir
+
+### Aşama 6 doğrulama sonucu
+
+- [x] `npm run typecheck`
+- [x] `npm run lint`
+- [x] `npm test` — 14 dosya, 140 test
+- [x] `npm run build` — Vite üretim çıktısı başarılı
+- [x] `npm audit --audit-level=moderate` — 0 açık
+- [x] Yerel Vite üretim önizlemesi — HTTP 200
+- [x] Altı motif, seed, oran, simetri, sınır/aralık, negatif merkez, atomiklik, undo/redo, JSON ve büyük motif senaryoları otomatik testte başarılı
+- [!] Tarayıcı görsel QA yüzeyi bu çalışma oturumunda kullanılamadı; responsive üretim penceresi bileşen testleri, derleme ve HTTP duman kontrolüyle doğrulandı
+
+### Bilinen sınırlamalar
+
+- Üretim hesaplaması Aşama 6'da ana iş parçacığında çalışır; 1.000 ms/40.000 aday/5.000 sonuç sınırı tarayıcıyı korur. Daha ağır işler ölçülürse Web Worker değerlendirilecektir.
+- Malzeme oranları hedef dağılımdır; geometri nedeniyle reddedilen adaylar kesin oranı değiştirebilir.
+- Üretim ayarları projede saklanmaz; yalnız uygulanan düzenlenebilir placement sonuçları saklanır.
+- Araç geometrik ve deterministiktir; doğal dil, LLM, bulut AI veya referans görsel analizi içermez.
+
 ## Onay bekleyen aşama
 
-**Aşama 6.** Kullanıcı onayı olmadan başlanmayacaktır; yapay zekâ Aşama 5 kapsamında eklenmemiştir.
+**Aşama 7.** Kullanıcı onayı olmadan başlanmayacaktır; referans görsel analizi Aşama 6 kapsamında eklenmemiştir.
 
 ## Gelecek aşamalar
 
-Aşama 6–8 görev kırılımı [ROADMAP.md](ROADMAP.md) dosyasında tutulur. Her aşama başlamadan önce buraya ayrıntılı aktif görev listesi taşınır.
+Aşama 7–8 görev kırılımı [ROADMAP.md](ROADMAP.md) dosyasında tutulur. Her aşama başlamadan önce buraya ayrıntılı aktif görev listesi taşınır.
 
 ## Bilinen açık konular
 

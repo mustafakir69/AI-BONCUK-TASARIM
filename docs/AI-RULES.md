@@ -4,7 +4,7 @@
 
 Yapay zekâ bir görsel üretici değil, kısıtlı bir yerleşim önericisi olarak kullanılacaktır. Otoriter karar mercii yapay zekâ değil, sürümlü şema ve deterministik geometri doğrulayıcısıdır.
 
-Bu özellik Aşama 6 onayı verilmeden uygulanmayacaktır.
+Aşama 6'da gerçek LLM veya bulut sağlayıcısı yerine, aynı güvenlik sınırlarını kullanan yerel ve deterministik motif üretim motoru uygulanmıştır. Harici AI sağlayıcısı ayrıca onaylanmadan eklenmez.
 
 ## 2. Değişmez kurallar
 
@@ -124,7 +124,7 @@ Onarım algoritması ayrı ve deterministik olmalı; nesneleri küçük adımlar
 
 ## 10. Sağlayıcı bağımsızlığı
 
-Uygulama, sağlayıcıya özgü yanıtı alan modeline taşımayan bir `DesignGenerator` arayüzü kullanır. Sağlayıcı değişikliği editör ve geometri çekirdeğini etkilememelidir. Yapılandırılmış çıktı desteği, maliyet, gecikme ve veri politikası Aşama 6'da değerlendirilir.
+Gelecekte harici bir sağlayıcı eklenirse uygulama, sağlayıcıya özgü yanıtı alan modeline taşımayan bir `DesignGenerator` arayüzü kullanır. Sağlayıcı değişikliği editör ve geometri çekirdeğini etkilememelidir. Yapılandırılmış çıktı desteği, maliyet, gecikme ve veri politikası ayrı bir aşama/onay kapsamında değerlendirilir.
 
 ## 11. Test yaklaşımı
 
@@ -141,4 +141,20 @@ Uygulama, sağlayıcıya özgü yanıtı alan modeline taşımayan bir `DesignGe
 ## 12. Başarı ölçütü
 
 Bir AI özelliği, ürettiği resmin estetik görünümüyle değil; geçerli yerleşim oranı, kısıt uyumu, düzenlenebilirlik, kullanıcı düzeltme yükü ve gerçek nesne sayımının doğruluğuyla değerlendirilir.
+
+## 13. Aşama 6 deterministik motif motoru
+
+Aşama 6 motoru bir LLM değildir ve ağ çağrısı yapmaz. `frontend/src/domain/motifGeneration.ts` içindeki saf TypeScript üretici şu sözleşmeyi uygular:
+
+- Düz çizgi, halka, spiral, dalga, çiçek ve tekrarlı geometrik desen üretir.
+- Yalnız kullanıcının işaretlediği etkin katalog `materialId` değerlerini ve pozitif göreli oranları kabul eder.
+- Aynı seed, parametre ve katalogla aynı koordinat/malzeme/açı dizisini üretir; kontrolsüz `Math.random()` kullanmaz.
+- Yatay, dikey, dört yönlü ve radyal simetride koordinatla birlikte açıyı dönüştürür; aynı merkez koordinatını çoğaltmaz.
+- Her adayın gerçek döndürülmüş geometrisini üretim dikdörtgeni, çakışma ve minimum aralık kurallarına karşı sınar.
+- Yakın adayları hücre tabanlı uzamsal indeksle bulur; kesin karar mevcut daire/SAT/uzaklık fonksiyonlarınındır.
+- En fazla 5.000 kabul edilmiş boncuk, 40.000 aday ve 1.000 ms çalışma bütçesi kullanır. Sınır aşımında kısmi sonuç projeye uygulanmaz.
+- Önizleme geçici UI durumudur. Uygulama anında bütün aday proje yeniden doğrulanır ve tek undo/redo komutuyla eklenir veya değiştirilir.
+- Malzeme oranı hedefi yaklaşık dağılımdır; reddedilen adaylar nedeniyle kesin oran garantisi verilmez. Rapor gerçek kabul edilen placement nesnelerinden hesaplanır.
+
+Üretim ayarları Aşama 6'da proje şemasına yazılmaz. Uygulanan placement nesneleri mevcut JSON `1.1` modeliyle kaydedilir; böylece `1.0` ve `1.1` geriye uyumluluğu değişmez.
 

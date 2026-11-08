@@ -51,6 +51,7 @@ Arayüz profesyonel iş akışlarını desteklerken Türkçe, sade ve öğrenile
 - Malzeme adet özeti
 - Sürümlü JSON proje kaydetme/açma
 - PNG/JPEG görsel dışa aktarma ve CSV malzeme raporu
+- Seçili gerçek malzemelerle seed tabanlı geometrik motif üretimi, geçici önizleme ve atomik uygulama
 
 ### İleri kapsam
 
@@ -109,6 +110,8 @@ Kullanıcı JPEG/PNG yükler, motifin genel biçimi çıkarılır ve seçili kat
 | FR-09 | Izgara, cetvel, yakınlaştırma ve kaydırma bulunmalı | Zorunlu |
 | FR-09A | Shift/alan/Ctrl+A ile çoklu seçim ve gerçek geometriye dayalı toplu düzenleme bulunmalı | Zorunlu |
 | FR-09B | Gruplar proje JSON'unda saklanmalı ve toplu işlemler tek undo/redo adımı olmalı | Zorunlu |
+| FR-09C | Geometrik motif motoru yalnız seçili katalog malzemeleriyle deterministik placement nesneleri üretmeli | Zorunlu |
+| FR-09D | Motif önizlemesi projeyi değiştirmemeli; uygulama yeniden doğrulanmalı ve tek undo/redo adımı olmalı | Zorunlu |
 | FR-10 | Yapay zekâ yalnızca seçilen malzemelerle yapısal öneri vermeli | İleri |
 | FR-11 | JPEG/PNG referans yaklaşık motife dönüştürülebilmeli | Araştırma |
 

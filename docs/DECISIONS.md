@@ -79,7 +79,7 @@ Bu dosya, mimariyi etkileyen kararları kısa ADR (Architecture Decision Record)
 
 - **Tarih:** 2026-11-08
 - **Durum:** Kabul
-- **Karar:** Aşama 1–5 tarayıcı tabanlı çalışacak; Python/FastAPI yapay zekâ aşamasında eklenecek.
+- **Karar:** Aşama 1–6 tarayıcı tabanlı çalışacak; Python/FastAPI yalnız gerçek harici sağlayıcı veya sunucu işi ayrıca onaylanırsa eklenecek.
 - **Gerekçe:** Manuel editör için ağ servisi zorunlu değildir; erken backend işletim ve geliştirme yükü ekler.
 - **Sonuç:** JSON/JPEG yerel dosya akışları frontend altyapı uyarlayıcılarında uygulanır.
 
@@ -267,7 +267,39 @@ Bu dosya, mimariyi etkileyen kararları kısa ADR (Architecture Decision Record)
 - **Gerekçe:** Toplu işlemlerde binlerce uzak nesne için karesel çift taramasını azaltmak.
 - **Sonuç:** Kesin SAT/daire/uzaklık kararları değişmez. 5.000 uzak nesneli bütün proje otomatik testle doğrulanır.
 
+## D-034 — Aşama 6'da yerel deterministik motif üretimi
+
+- **Tarih:** 2026-11-09
+- **Durum:** Kabul
+- **Karar:** Akıllı motif aracı gerçek LLM, bulut servisi veya backend yerine React/Konva'dan bağımsız saf TypeScript üretici kullanacak.
+- **Gerekçe:** Geometri, seed tekrarlanabilirliği ve hata davranışı dış sağlayıcı değişkenliği olmadan doğrulanabilmeli; kullanıcı yalnız düzenlenebilir placement nesneleri almalı.
+- **Sonuç:** Altı geometrik motif aynı `Placement` modelini üretir. Gerçek sağlayıcı entegrasyonu Aşama 6 kapsamında değildir ve ayrıca onay gerektirir.
+
+## D-035 — Seed, uzamsal indeks ve üretim güvenlik sınırları
+
+- **Tarih:** 2026-11-09
+- **Durum:** Kabul
+- **Karar:** Üretim sabit seed karması/PRNG kullanacak; kabul edilmiş adaylar malzeme çapına göre hücrelenen uzamsal indekste tutulacak. Limitler 5.000 placement, 40.000 aday ve 1.000 ms olacaktır.
+- **Gerekçe:** Aynı girdinin aynı geometrik sonucu vermesi ve yoğun motiflerin tarayıcıyı sınırsız çalıştırmaması gerekir.
+- **Sonuç:** Hücre indeksi yalnız ön elemedir; kesin geometri çekirdeği değişmez. Limit veya süre aşımı kısmi motif döndürmez.
+
+## D-036 — Geçici önizleme ve atomik motif uygulaması
+
+- **Tarih:** 2026-11-09
+- **Durum:** Kabul
+- **Karar:** Motif önizlemesi proje/parmak izi/geçmiş dışında tutulacak. Ekleme `placements.add`, değiştirme önce/sonra belge durumlu `document.replace` komutuyla tek undo/redo adımı olacaktır.
+- **Gerekçe:** Kullanıcı sonucu görmeden projeyi değiştirmemeli; uygulama anında mevcut tasarımla çakışma yeniden sınanmalı ve kısmi sonuç oluşmamalıdır.
+- **Sonuç:** Önizleme ile uygulanan yerleşimlerin koordinat, malzeme ve açıları aynıdır; yalnız kalıcı benzersiz placement kimlikleri uygulama sınırında üretilir. Kaydedilmemiş tasarımı değiştirme açık onay ister.
+
+## D-037 — Üretim ayarlarının proje şemasına yazılmaması
+
+- **Tarih:** 2026-11-09
+- **Durum:** Kabul
+- **Karar:** Aşama 6 üretim türü, seed, yoğunluk, oran ve simetri ayarları geçici araç durumu olacak; uygulanan sonuç mevcut `Placement[]` olarak JSON `1.1` içinde saklanacak.
+- **Gerekçe:** Düzenlenebilir projenin otoriter verisi gerçek placement nesneleridir; üretim tarifini tekrar çalıştırma gereksinimi henüz istenmemiştir.
+- **Sonuç:** Şema yükselmez. Aşama 4 `1.0` ve Aşama 5 `1.1` projeleri mevcut sıkı geçiş/doğrulama hattıyla açılmaya devam eder.
+
 ## Açık kararlar
 
-- Aşama 6: AI sağlayıcısı ve yapılandırılmış çıktı yöntemi
+- Gerçek harici AI sağlayıcısı istenirse sağlayıcı, yapılandırılmış çıktı, gizlilik, maliyet ve backend yöntemi ayrıca kararlaştırılacaktır.
 

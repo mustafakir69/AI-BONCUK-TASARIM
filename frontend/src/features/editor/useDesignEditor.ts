@@ -35,6 +35,7 @@ import {
 } from "./editorCommands";
 
 export type EditorMode = "select" | "place";
+export type GeneratedMotifApplyMode = "append" | "replace";
 
 interface HistoryState extends EditorDocumentState {
   past: EditorCommand[];
@@ -133,6 +134,7 @@ export interface DesignEditorState {
   groupSelected(): boolean;
   ungroupSelected(): boolean;
   alignSelected(operation: AlignmentOperation): boolean;
+  applyGeneratedPlacements(placements: readonly Placement[], mode: GeneratedMotifApplyMode): boolean;
   undo(): void;
   redo(): void;
   setMinimumGap(valueMm: number): boolean;
@@ -482,6 +484,45 @@ export function useDesignEditor(materials: readonly Material[]): DesignEditorSta
     return commitUpdates(selectedPlacements, after, "Hizalama işlemi uygulandı.");
   }, [commitUpdates, materials, selectedPlacements]);
 
+  const applyGeneratedPlacements = useCallback((
+    placements: readonly Placement[],
+    applyMode: GeneratedMotifApplyMode,
+  ): boolean => {
+    if (placements.length === 0) {
+      setNotice("Uygulanacak motif önizlemesi bulunamadı.");
+      return false;
+    }
+    const ids = new Set(history.placements.map((placement) => placement.id));
+    const generated = placements.map((placement) => {
+      const id = createPlacementId(ids);
+      ids.add(id);
+      return { ...placement, id, rotationDeg: normalizeRotation(placement.rotationDeg) };
+    });
+    const nextPlacements = applyMode === "append" ? [...history.placements, ...generated] : generated;
+    const result = validateAllPlacements(nextPlacements, materials, minimumGapMm);
+    if (!result.valid) {
+      return reject(result, applyMode === "append"
+        ? "Motif mevcut tasarımla çakıştığı için hiçbir boncuk eklenmedi."
+        : "Motif geometri kurallarını geçemediği için mevcut tasarım korunmuştur.");
+    }
+    if (applyMode === "append") {
+      dispatch({ type: "execute", command: { type: "placements.add", placements: generated, groups: [] } });
+    } else {
+      dispatch({
+        type: "execute",
+        command: {
+          type: "document.replace",
+          before: { placements: history.placements, groups: history.groups },
+          after: { placements: generated, groups: [] },
+        },
+      });
+    }
+    setSelectedIds(new Set(generated.map((placement) => placement.id)));
+    setMode("select");
+    setNotice(`${generated.length} boncukluk motif ${applyMode === "append" ? "tasarıma eklendi" : "mevcut tasarımın yerine uygulandı"}.`);
+    return true;
+  }, [history.groups, history.placements, materials, minimumGapMm, reject]);
+
   const undo = useCallback(() => {
     const command = history.past.at(-1);
     if (!command) return;
@@ -598,6 +639,7 @@ export function useDesignEditor(materials: readonly Material[]): DesignEditorSta
     groupSelected,
     ungroupSelected,
     alignSelected,
+    applyGeneratedPlacements,
     undo,
     redo,
     setMinimumGap,
