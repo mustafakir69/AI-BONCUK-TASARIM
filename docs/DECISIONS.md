@@ -123,9 +123,24 @@ Bu dosya, mimariyi etkileyen kararları kısa ADR (Architecture Decision Record)
 - **Gerekçe:** Gereksiz bağımlılık ve mimari yükü önlemek.
 - **Sonuç:** Alan komutları UI durumundan ayrılarak olası mağaza geçişi kolay tutulur.
 
+## D-016 — Node, npm ve TypeScript araç zinciri
+
+- **Tarih:** 2026-11-08
+- **Durum:** Kabul
+- **Karar:** Frontend için Node.js alt sınırı 24, paket yöneticisi npm ve kilit dosyası `package-lock.json` olacak. TypeScript, kullanılan lint zincirinin desteklediği 6.0 hattında tutulacak.
+- **Gerekçe:** Tekrarlanabilir `npm ci` kurulumu sağlamak ve TypeScript 7 ile `typescript-eslint` arasındaki doğrulanmış eş bağımlılık uyuşmazlığından kaçınmak.
+- **Sonuç:** Geliştirme kurulumu `frontend` altında yapılır; bağımlılık yükseltmelerinde eş bağımlılıklar, testler ve güvenlik denetimi birlikte kontrol edilir.
+
+## D-017 — Konva çalışma alanının tembel yüklenmesi
+
+- **Tarih:** 2026-11-08
+- **Durum:** Kabul
+- **Karar:** Konva tabanlı `DesignWorkspace`, React `lazy`/`Suspense` ile uygulama kabuğundan ayrı üretim parçası olarak yüklenir.
+- **Gerekçe:** Canvas kitaplığının ilk JavaScript paketini 500 kB uyarı sınırının üzerine çıkarmasını önlemek.
+- **Sonuç:** İlk kabuk hızlı yüklenir; çalışma alanı hazırlanırken açık bir Türkçe yükleme durumu gösterilir.
+
 ## Açık kararlar
 
-- Aşama 1: Desteklenen Node LTS ve paket yöneticisi sürümü
 - Aşama 2: Malzeme görselinin JSON'a gömülmesi veya ayrı varlık olarak paketlenmesi
 - Aşama 3: Geri alma geçmişinde komut/diff/anlık görüntü tercihi ve üst sınır
 - Aşama 3: Performans ölçümüne göre uzamsal indeks seçimi

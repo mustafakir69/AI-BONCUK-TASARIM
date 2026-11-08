@@ -6,7 +6,7 @@ Temel ilke şudur: Sistem yalnızca güzel bir görüntü değil, gerçek fiziks
 
 ## Proje durumu
 
-**Aşama 0 — Planlama tamamlandı.** Henüz uygulama kodu veya kurulmuş bir paket yoktur. Aşama 1, kullanıcı onayı alındıktan sonra başlayacaktır.
+**Aşama 1 — Temel uygulama ve arayüz tamamlandı.** React/Vite uygulaması; Türkçe üç panelli arayüz, Konva tabanlı boş çalışma alanı, gerçek ölçü girişi, mm/cm dönüşümü, ızgara ve zoom/pan görünümüyle çalışmaktadır. Aşama 2 için kullanıcı onayı beklenmektedir.
 
 ## Planlanan teknoloji seçimi
 
@@ -51,7 +51,7 @@ Python/FastAPI ilk manuel editör için gerekli değildir ve Aşama 5'e kadar ç
     └── tests/
 ```
 
-Boş uygulama dizinleri Aşama 0'da yalnızca sınırları görünür kılmak için hazırlanmıştır.
+Frontend uygulaması bu katman sınırlarına göre kurulmuştur. Backend dizini, Aşama 5'e kadar uygulama kodu içermez.
 
 ## Belgeler
 
@@ -67,9 +67,43 @@ Boş uygulama dizinleri Aşama 0'da yalnızca sınırları görünür kılmak i�
 
 ## Kurulum
 
-Aşama 0 belge aşaması olduğu için kurulacak paket veya çalıştırılacak uygulama yoktur. Aşama 1'de kurulum ve geliştirme komutları bu bölümde belgelenecektir.
+Gereksinimler:
 
-## Aşama 1'e geçiş
+- Node.js 24 veya üzeri
+- npm 11 veya uyumlu daha yeni sürüm
 
-Aşama 1; Vite/React/TypeScript iskeleti, temel üç panelli Türkçe arayüz ve boş fakat fiziksel ölçülere bağlı çalışma alanını kapsar. Ayrıntılı kontrol listesi [docs/TASKS.md](docs/TASKS.md) içindedir ve başlamadan önce kullanıcı onayı gerekir.
+```powershell
+cd frontend
+npm ci
+npm run dev
+```
+
+Vite geliştirme sunucusu varsayılan olarak `http://127.0.0.1:5173` adresinde açılır.
+
+### Kalite ve üretim komutları
+
+```powershell
+npm run typecheck
+npm run lint
+npm test
+npm run build
+npm run preview
+```
+
+Üretim çıktısı `frontend/dist/` dizininde oluşturulur. `package-lock.json` sürüm kontrolüne alınır; bağımlılık kurulumu için tekrarlanabilir `npm ci` akışı kullanılır.
+
+## Mevcut özellikler
+
+- Modern ve responsive Türkçe uygulama kabuğu
+- Sol tarafta Aşama 2 durumu açıkça belirtilen örnek malzeme kütüphanesi
+- Konva tabanlı, fiziksel en-boy oranını koruyan boş çalışma alanı
+- Milimetre/santimetre girişi; içeride yalnız milimetre saklama
+- Görünüm ızgarası, yakınlaştırma, uzaklaştırma, ekrana sığdırma ve kaydırma
+- Sağ tarafta çalışma alanı ayarları, sıfırdan türetilmiş sayaç ve gelecek nesne özellikleri alanı
+- Aşama 3/4 işlemleri için açıkça devre dışı bırakılmış araçlar
+- Birim ve bileşen testleri, sıkı TypeScript, lint ve üretim derlemesi
+
+## Aşama 2'ye geçiş
+
+Aşama 2; gerçek malzeme veri modeli, başlangıç kataloğu ve malzeme ekleme/düzenleme/silme akışlarını kapsar. Ayrıntılar [docs/ROADMAP.md](docs/ROADMAP.md) içindedir ve başlamadan önce kullanıcı onayı gerekir.
 
