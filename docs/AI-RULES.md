@@ -4,7 +4,7 @@
 
 Yapay zekâ bir görsel üretici değil, kısıtlı bir yerleşim önericisi olarak kullanılacaktır. Otoriter karar mercii yapay zekâ değil, sürümlü şema ve deterministik geometri doğrulayıcısıdır.
 
-Bu özellik Aşama 5'ten önce uygulanmayacaktır.
+Bu özellik Aşama 6 onayı verilmeden uygulanmayacaktır.
 
 ## 2. Değişmez kurallar
 
@@ -25,11 +25,11 @@ Yapay zekâ:
 interface DesignGenerationRequest {
   requestId: string;
   prompt: string;
-  workspace: {
+  motif: {
     widthMm: number;
     heightMm: number;
-    minimumGapMm: number;
   };
+  minimumGapMm: number;
   allowedMaterials: Array<{
     id: string;
     name: string;
@@ -46,7 +46,7 @@ interface DesignGenerationRequest {
 }
 ```
 
-Komut metninde geçen ölçüler ile yapılandırılmış alan çelişirse sistem kullanıcıya çelişkiyi açıklar; sessizce rastgele seçim yapmaz. Güvenlik ve maliyet için komut uzunluğu ve azami nesne sayısı sınırlandırılır.
+Komut metninde geçen ölçüler ile yapılandırılmış motif hedefi çelişirse sistem kullanıcıya çelişkiyi açıklar; sessizce rastgele seçim yapmaz. Güvenlik ve maliyet için komut uzunluğu ve azami nesne sayısı sınırlandırılır.
 
 ## 4. Çıktı sözleşmesi
 
@@ -103,11 +103,11 @@ Onarım algoritması ayrı ve deterministik olmalı; nesneleri küçük adımlar
 - Toplam ve malzeme bazlı adetler çıktı alanından okunmaz.
 - Sayım, yalnız doğrulanıp projeye kabul edilen nesneler üzerinde yapılır.
 
-## 8. Referans görsel kuralları (Aşama 6)
+## 8. Referans görsel kuralları (Aşama 7)
 
 - JPEG/PNG yalnız motifin siluet, yön, yoğunluk ve renk bölgeleri gibi özelliklerini çıkarmak için kullanılır.
 - Görseldeki boncuğun piksel boyutu gerçek fiziksel ölçü sayılmaz.
-- Kullanıcı hedef çalışma alanını ve izinli malzemeleri ayrıca seçer.
+- Kullanıcı hedef motif ölçüsünü ve izinli malzemeleri ayrıca seçer.
 - Sistem, görseli birebir kopyalama veya kusursuz dönüşüm garantisi vermez.
 - Çıktı yine `DesignProposal` benzeri yapılandırılmış yerleşimdir ve aynı geometri hattından geçer.
 - Yüklenen görselin türü, boyutu, çözünürlüğü ve gizlilik koşulları çağrıdan önce doğrulanır.
@@ -117,14 +117,14 @@ Onarım algoritması ayrı ve deterministik olmalı; nesneleri küçük adımlar
 
 - API anahtarları yalnız backend'de saklanır.
 - Kullanıcı metni ve görseli güvenilmeyen girdidir; istem enjeksiyonu veri kısıtlarını değiştiremez.
-- Sağlayıcıya yalnız görev için gerekli malzeme ve çalışma alanı verisi gönderilir.
+- Sağlayıcıya yalnız görev için gerekli malzeme ve hedef motif verisi gönderilir.
 - Sağlayıcı, saklama süresi ve kullanıcı onayı ticari sürümden önce belgelenir.
 - Hassas içerik loglarda maskelenir; ham görseller varsayılan olarak kalıcı tutulmaz.
 - Zaman aşımı, maliyet, hız ve azami çıktı nesnesi limitleri sunucuda uygulanır.
 
 ## 10. Sağlayıcı bağımsızlığı
 
-Uygulama, sağlayıcıya özgü yanıtı alan modeline taşımayan bir `DesignGenerator` arayüzü kullanır. Sağlayıcı değişikliği editör ve geometri çekirdeğini etkilememelidir. Yapılandırılmış çıktı desteği, maliyet, gecikme ve veri politikası Aşama 5'te değerlendirilir.
+Uygulama, sağlayıcıya özgü yanıtı alan modeline taşımayan bir `DesignGenerator` arayüzü kullanır. Sağlayıcı değişikliği editör ve geometri çekirdeğini etkilememelidir. Yapılandırılmış çıktı desteği, maliyet, gecikme ve veri politikası Aşama 6'da değerlendirilir.
 
 ## 11. Test yaklaşımı
 

@@ -39,21 +39,23 @@ Arayüz profesyonel iş akışlarını desteklerken Türkçe, sade ve öğrenile
 
 ### İlk kullanılabilir sürüm
 
-- Çalışma alanı genişliği/yüksekliği ve mm/cm girişi
-- Izgara, cetvel, yakınlaştırma ve kaydırma
+- Hedef motif genişliği/yüksekliği ve mm/cm girişi
+- Sınırsız tasarım düzlemi; negatif koordinatlar
+- Gerçek milimetrik yatay/dikey cetvel, ızgara, yakınlaştırma ve kaydırma
+- Düzlemi sınırlamayan, açılıp kapatılabilir motif sınır kılavuzu
 - Malzeme ekleme, düzenleme, devre dışı bırakma ve silme kuralları
 - Boncuk ekleme, seçme, taşıma, döndürme, renklendirme ve silme
 - Geri al/yinele
+- Çoklu/alan seçimi, toplu taşıma/döndürme, kopyalama, gruplama, hizalama ve dağıtma
 - Sınır, çakışma ve minimum aralık doğrulaması
 - Malzeme adet özeti
 - Sürümlü JSON proje kaydetme/açma
-- JPEG önizleme ve dışa aktarma
+- PNG/JPEG görsel dışa aktarma ve CSV malzeme raporu
 
 ### İleri kapsam
 
 - Yazılı komuttan yapılandırılmış yerleşim önerisi
 - Referans görselden motif geometrisi çıkarma ve gerçek malzemelerle yeniden kurma
-- Çoklu seçim ve toplu düzenleme
 - Kullanıcı hesabı, bulut proje yönetimi, abonelik ve lisanslama
 
 ### İlk sürüm kapsamı dışında
@@ -69,12 +71,13 @@ Arayüz profesyonel iş akışlarını desteklerken Türkçe, sade ve öğrenile
 
 ### Manuel tasarım
 
-1. Kullanıcı çalışma alanını mm veya cm olarak girer.
+1. Kullanıcı hedef motif ölçüsünü mm veya cm olarak girer.
 2. Sistem değeri mm'ye çevirip saklar.
-3. Kullanıcı katalogdan bir malzeme seçer ve alana yerleştirir.
-4. Sistem sınır/çakışma kurallarını denetler.
-5. Geçerli işlem kaydedilir ve sayım güncellenir; geçersiz işlem reddedilir.
-6. Kullanıcı projeyi JSON olarak kaydeder veya JPEG önizlemesi alır.
+3. Sistem sonsuz düzlemde motif hedefini merkezdeki sınır kılavuzuyla gösterebilir.
+4. Kullanıcı katalogdan bir malzeme seçer ve düzleme yerleştirir.
+5. Sistem etkin motif sınırı ve çakışma kurallarını denetler.
+6. Geçerli işlem kaydedilir ve sayım güncellenir; geçersiz işlem reddedilir.
+7. Kullanıcı projeyi JSON olarak kaydeder veya JPEG önizlemesi alır.
 
 ### Yapay zekâ ile tasarım (ileri aşama)
 
@@ -92,15 +95,20 @@ Kullanıcı JPEG/PNG yükler, motifin genel biçimi çıkarılır ve seçili kat
 
 | Kimlik | Gereksinim | Öncelik |
 | --- | --- | --- |
-| FR-01 | Çalışma alanı mm veya cm ile tanımlanabilmeli; içeride mm saklanmalı | Zorunlu |
+| FR-01 | Hedef motif ölçüsü mm veya cm ile tanımlanabilmeli; içeride mm saklanmalı | Zorunlu |
+| FR-01A | Tasarım düzlemi fiziksel sınır taşımamalı; pan/zoom ve negatif koordinatları desteklemeli | Zorunlu |
+| FR-01B | Sabit cetveller görünüm dönüşümünden gerçek mm koordinatlarını göstermeli | Zorunlu |
 | FR-02 | Kullanıcı malzeme oluşturabilmeli, düzenleyebilmeli ve güvenli biçimde silebilmeli | Zorunlu |
 | FR-03 | Her yerleşim kimlik, malzeme kimliği, merkez koordinatı ve açı taşımalı | Zorunlu |
 | FR-04 | Ekleme/taşıma/döndürme öncesi sınır ve çakışma kontrolü yapılmalı | Zorunlu |
 | FR-05 | Tekli seçim, silme, renk değiştirme, geri al/yinele bulunmalı | Zorunlu |
 | FR-06 | Adet özeti gerçek yerleşimlerden türetilmeli | Zorunlu |
 | FR-07 | Proje sürümlü JSON olarak kaydedilip açılabilmeli | Zorunlu |
-| FR-08 | Güncel tasarım JPEG olarak dışa aktarılabilmeli | Zorunlu |
+| FR-08 | Güncel tasarım motif veya yerleşim sınırından PNG/JPEG olarak dışa aktarılabilmeli | Zorunlu |
+| FR-08A | Malzeme adetleri Excel uyumlu CSV raporuna aktarılabilmeli | Zorunlu |
 | FR-09 | Izgara, cetvel, yakınlaştırma ve kaydırma bulunmalı | Zorunlu |
+| FR-09A | Shift/alan/Ctrl+A ile çoklu seçim ve gerçek geometriye dayalı toplu düzenleme bulunmalı | Zorunlu |
+| FR-09B | Gruplar proje JSON'unda saklanmalı ve toplu işlemler tek undo/redo adımı olmalı | Zorunlu |
 | FR-10 | Yapay zekâ yalnızca seçilen malzemelerle yapısal öneri vermeli | İleri |
 | FR-11 | JPEG/PNG referans yaklaşık motife dönüştürülebilmeli | Araştırma |
 

@@ -1,38 +1,52 @@
+import { useRef } from "react";
 import { Icon, type IconName } from "../../shared/Icon";
 
-interface ToolDefinition {
+interface ToolbarProps {
+  canUndo: boolean;
+  canRedo: boolean;
+  onNewProject(): void;
+  onOpenFile(file: File): void;
+  onSave(): void;
+  onUndo(): void;
+  onRedo(): void;
+  onExport(): void;
+}
+
+interface ToolButtonProps {
   label: string;
   icon: IconName;
-  availableIn: string;
+  onClick(): void;
+  disabled?: boolean;
   prominent?: boolean;
 }
 
-const tools: ToolDefinition[] = [
-  { label: "Yeni proje", icon: "file", availableIn: "Aşama 4" },
-  { label: "Aç", icon: "folder", availableIn: "Aşama 4" },
-  { label: "Kaydet", icon: "save", availableIn: "Aşama 4" },
-  { label: "Geri al", icon: "undo", availableIn: "Aşama 3" },
-  { label: "Yinele", icon: "redo", availableIn: "Aşama 3" },
-  { label: "Dışa aktar", icon: "export", availableIn: "Aşama 4", prominent: true },
-];
+function ToolButton({ label, icon, onClick, disabled = false, prominent = false }: ToolButtonProps) {
+  return (
+    <button className={prominent ? "tool-button tool-button--accent" : "tool-button"} disabled={disabled} onClick={onClick} title={label} type="button">
+      <Icon name={icon} /><span>{label}</span>
+    </button>
+  );
+}
 
-export function Toolbar() {
+export function Toolbar({
+  canUndo, canRedo, onNewProject, onOpenFile, onSave, onUndo, onRedo, onExport,
+}: ToolbarProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
   return (
     <nav aria-label="Proje araçları" className="toolbar">
-      {tools.map((tool, index) => (
-        <div className={index === 3 ? "toolbar__item toolbar__item--separated" : "toolbar__item"} key={tool.label}>
-          <button
-            className={tool.prominent ? "tool-button tool-button--accent" : "tool-button"}
-            disabled
-            title={`${tool.availableIn} kapsamında etkinleşecek`}
-            type="button"
-          >
-            <Icon name={tool.icon} />
-            <span>{tool.label}</span>
-          </button>
-          <span className="sr-only">{tool.availableIn} kapsamında etkinleşecek</span>
-        </div>
-      ))}
+      <div className="toolbar__item"><ToolButton icon="file" label="Yeni proje" onClick={onNewProject} /></div>
+      <div className="toolbar__item">
+        <ToolButton icon="folder" label="Aç" onClick={() => inputRef.current?.click()} />
+        <input accept=".json,application/json" aria-label="Proje dosyası seç" className="sr-only" onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) onOpenFile(file);
+          event.target.value = "";
+        }} ref={inputRef} type="file" />
+      </div>
+      <div className="toolbar__item"><ToolButton icon="save" label="Kaydet" onClick={onSave} /></div>
+      <div className="toolbar__item toolbar__item--separated"><ToolButton disabled={!canUndo} icon="undo" label="Geri al" onClick={onUndo} /></div>
+      <div className="toolbar__item"><ToolButton disabled={!canRedo} icon="redo" label="Yinele" onClick={onRedo} /></div>
+      <div className="toolbar__item"><ToolButton icon="export" label="Dışa aktar" onClick={onExport} prominent /></div>
     </nav>
   );
 }

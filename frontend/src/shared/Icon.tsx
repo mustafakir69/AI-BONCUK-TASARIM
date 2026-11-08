@@ -3,6 +3,9 @@ import type { ReactNode } from "react";
 export type IconName =
   | "add"
   | "arrow-down"
+  | "bead"
+  | "cursor"
+  | "edit"
   | "export"
   | "file"
   | "fit"
@@ -11,12 +14,27 @@ export type IconName =
   | "minus"
   | "plus"
   | "redo"
+  | "rotate"
   | "save"
+  | "trash"
   | "undo";
 
 const paths: Record<IconName, ReactNode> = {
   add: <path d="M12 5v14M5 12h14" />,
   "arrow-down": <path d="m7 10 5 5 5-5" />,
+  bead: (
+    <>
+      <circle cx="12" cy="12" r="7" />
+      <circle cx="12" cy="12" r="2" />
+    </>
+  ),
+  cursor: <path d="m5 3 14 9-6 1-3 6z" />,
+  edit: (
+    <>
+      <path d="m4 20 4.2-1 10.9-10.9a2.1 2.1 0 0 0-3-3L5.2 16z" />
+      <path d="m14.8 6.4 2.8 2.8" />
+    </>
+  ),
   export: (
     <>
       <path d="M12 3v12" />
@@ -45,10 +63,21 @@ const paths: Record<IconName, ReactNode> = {
   minus: <path d="M5 12h14" />,
   plus: <path d="M12 5v14M5 12h14" />,
   redo: <path d="M20 7v5h-5M20 12a8 8 0 1 0-2.3 5.7" />,
+  rotate: (
+    <>
+      <path d="M20 7v5h-5M20 12a8 8 0 1 0-2.3 5.7" />
+      <path d="M12 8v4l3 2" />
+    </>
+  ),
   save: (
     <>
       <path d="M5 3h12l2 2v16H5z" />
       <path d="M8 3v6h8V3M8 21v-7h8v7" />
+    </>
+  ),
+  trash: (
+    <>
+      <path d="M4 7h16M9 3h6l1 4H8zM7 7l1 14h8l1-14M10 11v6M14 11v6" />
     </>
   ),
   undo: <path d="M4 7v5h5M4 12a8 8 0 1 1 2.3 5.7" />,

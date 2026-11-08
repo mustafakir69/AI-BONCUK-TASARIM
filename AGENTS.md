@@ -4,7 +4,8 @@
 
 - Tüm fiziksel ölçüleri uygulama içinde milimetre olarak sakla; piksel yalnızca görüntüleme içindir.
 - Boncuk ölçülerini nesneden değil bağlı olduğu malzemeden oku.
-- Geçersiz, çakışan veya çalışma alanı dışına taşan yerleşimi kalıcı duruma alma.
+- Geçersiz veya çakışan yerleşimi kalıcı duruma alma; motif sınır zorunluluğu etkinse hedef motif dışına taşmaya da izin verme.
+- Sonsuz görünüm düzlemini hedef motif ölçülerinden ayır; pan/zoom fiziksel koordinatları değiştirmemeli.
 - Malzeme adetlerini yerleştirilmiş nesnelerden hesapla; tahmin etme.
 - Geometri çekirdeğini arayüzden ve yapay zekâdan bağımsız, saf ve test edilebilir tut.
 - Kullanıcının seçmediği malzemeyi yapay zekâ çıktısına ekleme.

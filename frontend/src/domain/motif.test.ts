@@ -3,10 +3,10 @@ import {
   formatMeasurement,
   fromMillimeters,
   toMillimeters,
-  validateWorkspaceDimensions,
-} from "./workspace";
+  validateMotifDimensions,
+} from "./motif";
 
-describe("çalışma alanı birimleri", () => {
+describe("motif ölçüleri", () => {
   it("santimetreyi milimetreye dönüştürür", () => {
     expect(toMillimeters(20, "cm")).toBe(200);
     expect(toMillimeters(250, "mm")).toBe(250);
@@ -17,16 +17,16 @@ describe("çalışma alanı birimleri", () => {
     expect(fromMillimeters(250, "mm")).toBe(250);
   });
 
-  it("geçerli üretim alanlarını kabul eder", () => {
-    expect(validateWorkspaceDimensions(200, 250)).toEqual([]);
-    expect(validateWorkspaceDimensions(300, 400)).toEqual([]);
-    expect(validateWorkspaceDimensions(100, 150)).toEqual([]);
+  it("geçerli motif ölçülerini kabul eder", () => {
+    expect(validateMotifDimensions(200, 250)).toEqual([]);
+    expect(validateMotifDimensions(300, 400)).toEqual([]);
+    expect(validateMotifDimensions(100, 150)).toEqual([]);
   });
 
   it("sonlu olmayan, sıfır ve üst sınırı aşan ölçüleri reddeder", () => {
-    expect(validateWorkspaceDimensions(Number.NaN, 250)).not.toHaveLength(0);
-    expect(validateWorkspaceDimensions(0, 250)).not.toHaveLength(0);
-    expect(validateWorkspaceDimensions(5001, 250)).not.toHaveLength(0);
+    expect(validateMotifDimensions(Number.NaN, 250)).not.toHaveLength(0);
+    expect(validateMotifDimensions(0, 250)).not.toHaveLength(0);
+    expect(validateMotifDimensions(5001, 250)).not.toHaveLength(0);
   });
 
   it("ölçü metninde gereksiz ondalıkları kaldırır", () => {

@@ -7,7 +7,7 @@
 - Manuel editörü backend olmadan çalıştırmak
 - Yapay zekâ ve görsel analizini daha sonra sınırları belli servisler olarak eklemek
 - JSON şemasını sürümleyerek eski projelerin taşınabilmesini sağlamak
-- Gelecekte çoklu seçimi mevcut nesne modelini bozmadan eklemek
+- Binlerce nesnede çoklu seçimi ve atomik toplu komutları verimli tutmak
 
 ## 2. Sistem bağlamı
 
@@ -19,7 +19,7 @@ React editörü ──► Alan modeli + geometri çekirdeği
    │                         │
    ├──► JSON/JPEG uyarlayıcıları
    │
-   └──► (Aşama 5+) FastAPI ──► AI/görsel analiz sağlayıcıları
+   └──► (Aşama 6+) FastAPI ──► AI/görsel analiz sağlayıcıları
                                │
                                └──► Yapısal öneri
                                         │
@@ -33,9 +33,9 @@ Manuel ilk sürüm tarayıcı içinde ve yerel dosyalarla çalışır. Backend, 
 
 ### Alan (`frontend/src/domain`)
 
-- Malzeme, yerleşim, çalışma alanı ve proje tipleri
+- Malzeme, yerleşim, hedef motif ve proje tipleri
 - mm/cm dönüşümleri
-- Dönüşüm matrisi yardımcıları
+- Dünya/ekran koordinat dönüşümleri, cetvel adımı ve görünür işaret hesapları
 - Sınır, çakışma, minimum aralık ve proje doğrulaması
 - Adet türetme
 
@@ -44,7 +44,7 @@ Bu katman React, Konva, tarayıcı API'si veya ağ istemcisi bilmez.
 ### Uygulama (`frontend/src/features`)
 
 - Editör komutları: ekle, taşı, döndür, sil, renk değiştir
-- Seçim modeli (`selectedIds: Set<PlacementId>`) — ilk sürüm tek seçim kullansa da çoklu seçime hazırdır
+- Çoklu seçim modeli (`selectedIds: Set<PlacementId>`) ve kalıcı, iç içe olmayan grup modeli
 - Geri al/yinele geçmişi
 - Malzeme kataloğu ve proje iş akışları
 - Doğrulama sonucunu kullanıcı eylemine çevirme
@@ -60,41 +60,50 @@ Bu katman React, Konva, tarayıcı API'si veya ağ istemcisi bilmez.
 ### Altyapı (`frontend/src/infrastructure`)
 
 - Konva sahne uyarlayıcısı
-- JSON dosya okuma/yazma
-- JPEG dışa aktarma
+- Sürümlü ve şema doğrulamalı yerel malzeme kataloğu saklaması
+- Boyut sınırlı JSON dosya okuma ve Blob tabanlı indirme
+- Görünümden bağımsız PNG/JPEG Canvas çıktısı
 - Tarayıcı saklama/indirme API'leri
 - İleride HTTP istemcisi
 
 Bağımlılıklar dıştan içe akar: `sunum → uygulama → alan`. Altyapı, uygulamanın tanımladığı arayüzleri uygular; alan altyapıya bağımlı olmaz.
 
-## 4. Koordinat ve ölçü sistemi
+## 4. Koordinat, görünüm ve motif sistemi
 
 - Alan modeli birimi: **mm**.
-- Orijin: çalışma alanının sol üst köşesi `(0, 0)`.
-- Pozitif X sağa, pozitif Y aşağıya gider.
+- Tasarım yüzeyi fiziksel sınırı olmayan sonsuz bir düzlemdir.
+- Orijin düzlemde sabit `(0, 0)` noktasıdır; başlangıç görünümünde ekran merkezindedir.
+- Pozitif X sağa, negatif X sola; pozitif Y aşağıya, negatif Y yukarıya gider.
 - Yerleşimin `xMm`/`yMm` değeri geometrik merkezidir.
 - Açı derece cinsindedir, saat yönünde artar ve kayıtta `[0, 360)` aralığına normalize edilir.
-- Ekran dönüşümü: `screenPx = viewportOffsetPx + modelMm × pixelsPerMm × zoom`.
-- Kaydırma ve yakınlaştırma görünüm durumudur; JSON proje geometrisini değiştirmez.
+- Ekran dönüşümü: `screenPx = originPx + worldMm × pixelsPerMm`.
+- `originPx`, görünüm merkezi ve ekran boyutundan türetilen fiziksel orijin konumudur.
+- Kaydırma yalnız `viewCenterMm`, yakınlaştırma yalnız `pixelsPerMm` değerini değiştirir; proje geometrisi değişmez.
+- Cetveller, ızgara, imleç koordinatı ve motif kılavuzu aynı saf dönüşüm fonksiyonlarını kullanır.
+- Cetvel çubukları ekran kenarında sabittir; işaret değerleri görünür dünya aralığından üretilir.
+- Cetvel ana adımı zoom düzeyine göre en az okunabilir piksel aralığını sağlayan `1, 5, 10, 50, 100… mm` dizisinden seçilir.
+- Hedef motif `widthMm`/`heightMm` ile saklanır ve orijinde merkezlenir: `[-w/2,w/2] × [-h/2,h/2]`.
+- Motif kılavuzu yalnız görsel/üretim hedefidir; sonsuz düzlemi kesmez veya yeniden boyutlandırmaz.
 - Kullanıcı cm girerse sınırda `mm = cm × 10` dönüşümü yapılır.
 
-Model koordinatlarını merkez tabanlı seçmek, döndürme ve farklı geometriler için tutarlı çarpışma hesabı sağlar.
+Model koordinatlarını orijin ve nesne merkezi tabanlı seçmek, döndürme ve farklı geometriler için tutarlı çarpışma hesabı sağlar. Dönüşümler `domain/coordinates.ts` içinde React ve Konva'dan bağımsızdır.
 
 ## 5. Durum modeli
 
 ```text
 EditorState
 ├── project                 Kalıcı ve dışa aktarılabilir veri
-│   ├── workspace
+│   ├── motif                   Hedef genişlik/yükseklik (mm)
 │   ├── materials
-│   └── placements
+│   ├── placements
+│   └── groups                  Kalıcı grup kimliği ve yerleşim üyeleri
 ├── selection.selectedIds   Geçici seçim durumu
-├── viewport                zoom, pan, grid görünürlüğü
+├── viewport                viewCenterMm, pixelsPerMm, grid görünürlüğü
 ├── history                 undo/redo komutları veya anlık görüntüleri
 └── interaction             sürükleme önizlemesi ve doğrulama mesajı
 ```
 
-`project` dışındaki görünüm/etkileşim durumu ilk JSON şemasına yazılmaz. Izgara ve minimum aralık gibi proje davranışını etkileyen ayarlar proje içine yazılır; zoom/pan tercihi daha sonra isteğe bağlı kullanıcı ayarı olabilir.
+`project` dışındaki görünüm/etkileşim durumu ilk JSON şemasına yazılmaz. `viewCenterMm`, `pixelsPerMm`, imleç ve kılavuz görünürlüğü geçici görünüm durumudur. Hedef motif ölçüsü kalıcı proje verisidir. Izgara ve minimum aralık gibi proje davranışını etkileyen ayarlar proje içine yazılır; zoom/pan tercihi daha sonra isteğe bağlı kullanıcı ayarı olabilir.
 
 ## 6. Komut ve geri alma yaklaşımı
 
@@ -111,13 +120,12 @@ type EditorCommand =
 
 Sürükleme boyunca aday konum geçici olarak gösterilir; yalnız `dragEnd` sırasında geçerli komut geçmişe eklenir. Geçersiz adayda nesne son geçerli konumuna döner. Sürekli işaretçi hareketlerinin her biri geçmişe yazılmaz.
 
-İlk uygulamada küçük projeler için sınırlı, değişmez anlık görüntüler veya terslenebilir komutlar değerlendirilebilir. Tercih Aşama 3 performans ölçümüyle kesinleştirilir; dış API komut anlamını korur.
+Aşama 3'te terslenebilir komut yaklaşımı seçilmiştir. Aşama 5'te bu yapı `placements.add/remove/update` ve `groups.update` toplu komutlarıyla genişletilmiştir. Komutlar yalnız etkilenen yerleşim/grup deltalarını taşır; tam proje anlık görüntüsü saklamaz. Geçmiş 100 komutla sınırlıdır ve toplu işlem tek geri alma adımıdır.
 
 ## 7. Geometri çekirdeği API taslağı
 
 ```ts
 type ValidationIssueCode =
-  | "OUT_OF_BOUNDS"
   | "OVERLAP"
   | "MIN_GAP_VIOLATION"
   | "MATERIAL_NOT_FOUND"
@@ -135,15 +143,22 @@ countMaterials(placements): Record<MaterialId, number>
 
 Çekirdek, aday nesneyi kendisiyle karşılaştırmaz. Önce hızlı eksen hizalı çevre kutusu (AABB) elemesi, sonra kesin şekil testi yapılır. Ayrıntılar [DESIGN-RULES.md](DESIGN-RULES.md) içindedir.
 
+Aşama 3'te motif kılavuzu görseldir; bu nedenle `MOTIF_BOUNDS_EXCEEDED` manuel yerleştirme hattında etkin değildir. İleride açık bir proje ayarıyla motif sınırı zorunlu hale getirilirse aynı çekirdeğe ayrı sınır denetimi olarak eklenir.
+
 ## 8. Proje dosyası sınırı
 
 - JSON dosyası açılırken önce sözdizimi, sonra sürüm/şema, ardından alan kuralları doğrulanır.
 - Bilinmeyen ana sürüm reddedilir; bilinen eski sürüm açık bir göç fonksiyonuyla yükseltilir.
 - Yükleme atomiktir: herhangi bir zorunlu hata mevcut projeyi kısmen değiştirmez.
 - JPEG yalnız sunum çıktısıdır; tekrar içe aktarılıp düzenlenebilir veri sayılmaz.
-- Malzeme görseli ilk sürümde isteğe bağlı bir proje içi `data:` değeri veya güvenli yerel varlık başvurusu olarak ele alınır; kesin depolama kararı Aşama 2'de boyut testinden sonra verilir.
+- Aşama 4 şeması `1.0` sürümünü, proje kimliği/adı/tarihleri, motif ölçülerini, minimum aralığı, kullanılan malzeme kayıtlarını ve mm yerleşimlerini taşır.
+- Aşama 5 şeması `1.1` sürümünde grup üyeliklerini ve normal/hızlı klavye taşıma adımlarını ekler. `1.0` dosyaları boş grup ve `0,5/5 mm` varsayılanlarıyla güncel modele taşınır.
+- İçe aktarılan malzeme kimliği yerel katalogda farklı tanımla bulunursa yerel kayıt ezilmez; proje malzemesi yeni kimlikle eklenir ve bütün yerleşim başvuruları birlikte eşlenir.
+- Kaydedilmemiş durum, tarih alanlarını dışarıda bırakan kanonik proje içeriği parmak izinin son başarılı kayıt/açma anıyla karşılaştırılmasından türetilir.
+- Görsel çıktı Konva ekran görüntüsü değildir; kanonik mm geometrileri seçilen alan ve DPI üzerinden ayrı Canvas'a çizilir.
+- Aşama 2'de malzeme önizlemesi şekil, renk ve mm oranından üretilir; raster malzeme görseli saklanmaz. İleride görsel yükleme gereksinimi doğrulanırsa dosya türü/boyutu ve proje paketleme politikası ayrıca kararlaştırılır.
 
-## 9. Backend sınırı (Aşama 5+)
+## 9. Backend sınırı (Aşama 6+)
 
 Planlanan FastAPI sorumlulukları:
 
@@ -159,8 +174,8 @@ Backend hiçbir zaman istemcinin geometri doğrulamasını atlama yetkisi vermez
 
 1. Önce AABB ile aday çiftleri elenir.
 2. Küçük sahnelerde doğrusal tarama basitlik için yeterlidir.
-3. Ölçümde ihtiyaç görülürse üniform ızgara veya R-tree uzamsal indeksi eklenir.
-4. Konva katmanları; zemin/ızgara, malzemeler ve etkileşim kaplaması olarak ayrılır.
+3. Aşama 5 tam-proje doğrulaması AABB'ye göre sıralı tarama kullanır; yalnız X aralığı yakın nesneler etkin kümede kesin teste girer. 5.000 uzak nesneli tam proje ve alan seçimi test edilmiştir.
+4. Konva yerleşim düğümleri memoize bir grupta tutulur; imleç önizlemesi güncellenirken bütün yerleşim listesi yeniden oluşturulmaz.
 5. Cetvel/ızgara görünüm ölçeğine göre seyreltilir; model nesnesi olarak saklanmaz.
 6. Performans hedefi sentetik 1.000 ve 5.000 nesne senaryolarıyla ölçülür.
 
@@ -169,8 +184,9 @@ Backend hiçbir zaman istemcinin geometri doğrulamasını atlama yetkisi vermez
 - **Birim:** Birim dönüşümü, açı normalizasyonu, SAT, daire/çokgen, sınır, aralık, sayım.
 - **Özellik tabanlı:** Simetri (`intersects(a,b) === intersects(b,a)`), dönüş periyodu, sonlu sayı değişmezleri.
 - **Bileşen:** Panel etkileşimleri, form doğrulaması, araç durumları.
-- **Entegrasyon:** Ekle/taşı/döndür/reddet, geri al/yinele, kaydet/aç turu.
+- **Entegrasyon:** Ekle/taşı/döndür/reddet, çoklu seçim, kopyalama, grup, hizalama, toplu undo/redo ve katalog güvenlik kuralları.
 - **Görsel/duman:** Üç panel düzeni, ızgara/cetvel ve JPEG önizleme.
+- **Dosya/çıktı:** JSON turu, bozuk dosyada atomiklik, kimlik yeniden eşleme, döndürülmüş sınırlar, DPI/bellek ve CSV adetleri.
 - **Uyumluluk (ileri):** TypeScript ve Python doğrulayıcılarına aynı altın test vakaları.
 
 ## 12. Hata yönetimi ve güvenlik
@@ -183,7 +199,7 @@ Backend hiçbir zaman istemcinin geometri doğrulamasını atlama yetkisi vermez
 
 ## 13. Dağıtım evrimi
 
-- Aşama 1–4: Statik frontend, yerel JSON/JPEG.
-- Aşama 5–6: Ayrı dağıtılan FastAPI servisi ve yapılandırılabilir API tabanı.
-- Aşama 7: Kimlik, proje depolama ve ticari servisler; bu ihtiyaçlar kanıtlanmadan önce altyapı eklenmez.
+- Aşama 1–5: Statik frontend, yerel JSON/JPEG.
+- Aşama 6–7: Ayrı dağıtılan FastAPI servisi ve yapılandırılabilir API tabanı.
+- Aşama 8: Kimlik, proje depolama ve ticari servisler; bu ihtiyaçlar kanıtlanmadan önce altyapı eklenmez.
 

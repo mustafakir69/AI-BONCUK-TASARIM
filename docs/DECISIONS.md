@@ -21,7 +21,7 @@ Bu dosya, mimariyi etkileyen kararları kısa ADR (Architecture Decision Record)
 ## D-003 — Merkez tabanlı yerleşim koordinatı
 
 - **Tarih:** 2026-11-08
-- **Durum:** Kabul
+- **Durum:** Değiştirildi — bkz. D-018
 - **Karar:** `xMm` ve `yMm`, nesnenin geometrik merkezini sol üst kökenli alanda gösterir; açı saat yönünde artar.
 - **Gerekçe:** Daire ve döndürülmüş dikdörtgen işlemlerini ortak ve simetrik hale getirmek.
 - **Sonuç:** Kullanıcı arayüzü/top-left gerektiren hesaplar sınırda dönüştürülür.
@@ -79,7 +79,7 @@ Bu dosya, mimariyi etkileyen kararları kısa ADR (Architecture Decision Record)
 
 - **Tarih:** 2026-11-08
 - **Durum:** Kabul
-- **Karar:** Aşama 1–4 tarayıcı tabanlı çalışacak; Python/FastAPI yapay zekâ aşamasında eklenecek.
+- **Karar:** Aşama 1–5 tarayıcı tabanlı çalışacak; Python/FastAPI yapay zekâ aşamasında eklenecek.
 - **Gerekçe:** Manuel editör için ağ servisi zorunlu değildir; erken backend işletim ve geliştirme yükü ekler.
 - **Sonuç:** JSON/JPEG yerel dosya akışları frontend altyapı uyarlayıcılarında uygulanır.
 
@@ -105,7 +105,7 @@ Bu dosya, mimariyi etkileyen kararları kısa ADR (Architecture Decision Record)
 - **Durum:** Kabul
 - **Karar:** İlk sürüm tekli seçim sunsa da uygulama durumu `selectedIds` koleksiyonu kullanacak.
 - **Gerekçe:** İleride çoklu seçime geçerken yerleşim kimliklerini veya panel sözleşmesini kırmamak.
-- **Sonuç:** UI ilk aşamada koleksiyonu en fazla bir kimlikle sınırlar.
+- **Sonuç:** Aşama 5'te koleksiyon Shift, alan seçimi ve Ctrl+A ile çoklu kullanılmaya başlanmıştır; grup üyeleri seçimde birlikte genişletilir.
 
 ## D-014 — Yapay zekânın yalnız yapılandırılmış öneri üretmesi
 
@@ -139,10 +139,135 @@ Bu dosya, mimariyi etkileyen kararları kısa ADR (Architecture Decision Record)
 - **Gerekçe:** Canvas kitaplığının ilk JavaScript paketini 500 kB uyarı sınırının üzerine çıkarmasını önlemek.
 - **Sonuç:** İlk kabuk hızlı yüklenir; çalışma alanı hazırlanırken açık bir Türkçe yükleme durumu gösterilir.
 
+## D-018 — Sonsuz düzlem ve sabit dünya orijini
+
+- **Tarih:** 2026-11-08
+- **Durum:** Kabul
+- **Karar:** Fiziksel tasarım yüzeyi genişlik/yükseklik sınırı taşımayan sonsuz bir düzlem olacak. Dünya orijini sabit `(0,0)` noktasıdır; başlangıçta ekran merkezinde görünür ve negatif koordinatlar desteklenir.
+- **Gerekçe:** Nakış tasarım programlarındaki teknik cetvel/pan çalışma biçimini sağlamak ve görünüm boyutunu üretim hedefinden ayırmak.
+- **Sonuç:** Görünüm `viewCenterMm + pixelsPerMm` ile tanımlanır. Cetvel, ızgara, imleç ve motif kılavuzu `domain/coordinates.ts` içindeki aynı saf dönüşümleri kullanır. Eski sol-üst kökenli D-003 görünüm kararı geçersizdir; yerleşimler yine geometrik merkez koordinatı taşır.
+
+## D-019 — Motif hedefinin görünüm düzleminden ayrılması
+
+- **Tarih:** 2026-11-08
+- **Durum:** Kabul
+- **Karar:** Sağ paneldeki genişlik/yükseklik, sonsuz yüzeyin değil orijinde merkezlenen hedef motifin fiziksel boyutudur.
+- **Gerekçe:** Üretim hedefini saklarken kullanıcıya sınırlandırılmamış bir düzenleme düzlemi sunmak.
+- **Sonuç:** `motif.widthMm` ve `motif.heightMm` proje verisidir. Kılavuz görünürlüğü geçici görünüm durumudur; ölçü değişikliği arka planı yeniden boyutlandırmaz. Zorunlu motif sınır doğrulaması ancak ayrı bir proje ayarı tanımlandığında aynı boyutları kullanacaktır; Aşama 3 politikası için bkz. D-025.
+
+## D-020 — Malzeme kataloğunun sürümlü LocalStorage zarfında tutulması
+
+- **Tarih:** 2026-11-08
+- **Durum:** Kabul
+- **Karar:** Aşama 2 kataloğu `ai-boncuk-tasarim.materials.v1` anahtarında, `schemaVersion: "1.0"` taşıyan bir zarfla ve ayrı altyapı servisi üzerinden saklanacak.
+- **Gerekçe:** Backend eklemeden yenilemeler arasında kalıcılık sağlamak; tarayıcı API'sini alan modelinden ayırmak ve ileride proje JSON'una geçişi kolaylaştırmak.
+- **Sonuç:** Yükleme her kaydı alan kuralları ve benzersiz kimlik açısından doğrular. Bozuk kayıt uygulamayı çökertmez; geçerli kayıtlar kurtarılır veya başlangıç kataloğuna dönülür.
+
+## D-021 — Malzeme önizlemesinin kanonik geometriden üretilmesi
+
+- **Tarih:** 2026-11-08
+- **Durum:** Kabul
+- **Karar:** Aşama 2'de ayrı raster malzeme görseli yüklenmeyecek; kart ve form önizlemeleri şekil, renk, genişlik/yükseklik ve pul delik çapından SVG olarak üretilecek.
+- **Gerekçe:** İstenen dört geometriyi gerçek oranlarıyla göstermek için ek dosya depolama ve MIME/boyut yönetimi gerekmiyor.
+- **Sonuç:** CSS/SVG pikseli yalnız sunum ölçeğidir; fiziksel ölçü kaynağı `Material` kaydındaki mm alanlarıdır. Görsel dosya gereksinimi ileride ayrıca doğrulanacaktır.
+
+## D-022 — Silme politikasında kullanım sayısı kapısı
+
+- **Tarih:** 2026-11-08
+- **Durum:** Kabul
+- **Karar:** Malzeme silme alan işlemi bir `usageCount` alacak; değer sıfırdan büyükse `MATERIAL_IN_USE` ile kaydı koruyacak.
+- **Gerekçe:** Aşama 2'de henüz yerleşim bulunmasa da Aşama 3'te kullanılan bir katalog kaydının yanlışlıkla silinmesini önlemek.
+- **Sonuç:** Arayüz bugün onaydan sonra kullanılmayan kaydı silebilir. Yerleşim modeli bağlandığında aynı servis sınırı, hesaplanan kullanım sayısıyla çalışacaktır.
+
+## D-023 — Terslenebilir ve sınırlı yerleşim komut geçmişi
+
+- **Tarih:** 2026-11-08
+- **Durum:** Kabul
+- **Karar:** Aşama 3 geri al/yinele geçmişi, tam proje anlık görüntüleri yerine `placement.add`, `placement.remove` ve önce/sonra taşıyan `placement.update` komutlarından oluşacak; son 100 komut korunacak.
+- **Gerekçe:** Yüzlerce/binlerce yerleşimde her işlem için bütün diziyi geçmişte çoğaltmadan deterministik geri alma sağlamak.
+- **Sonuç:** Ekleme, taşıma, döndürme, panel koordinat düzenleme ve silme geri alınabilir. Geçersiz adaylar hiçbir zaman geçmişe girmez; yeni komut yineleme kuyruğunu temizler. Katalog ölçüsü veya minimum aralık değiştiyse undo/redo adayı güncel kurallarla tekrar doğrulanır ve geçersiz olacak işlem uygulanmaz.
+
+## D-024 — AABB ön elemesi ve memoize Konva yerleşimleri
+
+- **Tarih:** 2026-11-08
+- **Durum:** Kabul
+- **Karar:** Etkileşim doğrulaması, kesin SAT/daire testinden önce AABB uzaklığıyla adayları eleyecek. Konva yerleşim listesi imleç önizlemesinden ayrı memoize edilecek.
+- **Gerekçe:** Geometri doğruluğunu değiştirmeden binlerce uzak nesnede gereksiz kesin testleri ve imleç hareketinde React düğüm yeniden üretimini azaltmak.
+- **Sonuç:** 5.000 uzak yerleşimli aday testi otomatik test kapsamındadır. Ek uzamsal indeks ancak gerçek proje ölçümü doğrusal aday taramasını yetersiz gösterirse eklenecektir.
+
+## D-025 — Aşama 3'te motif kılavuzunun görsel kalması
+
+- **Tarih:** 2026-11-08
+- **Durum:** Kabul
+- **Karar:** Manuel editörde motif sınır kılavuzu yerleştirmeyi kısıtlamayacak; negatif ve motif dışı koordinatlar geçerli olmaya devam edecek.
+- **Gerekçe:** Kullanıcı talebi sonsuz düzlemin korunması ve kılavuzun yalnız görsel rehber olması yönündedir; zorunlu sınır için ayrı bir proje ayarı henüz tanımlanmamıştır.
+- **Sonuç:** Aşama 3 doğrulama hattı çakışma, minimum aralık, malzeme başvurusu ve sayısal geçerliliği uygular. Motif sınır zorunluluğu ileride açık ayarla eklenecektir.
+
+## D-026 — Proje dosyasının kullanılan malzemeleri kendi içinde taşıması
+
+- **Tarih:** 2026-11-08
+- **Durum:** Kabul
+- **Karar:** JSON V1 yalnız yerleşimlerin başvurduğu tam katalog kayıtlarını proje içinde taşır; adet özeti saklanmaz.
+- **Gerekçe:** Proje farklı tarayıcıdaki LocalStorage kataloğundan bağımsız açılabilmeli ve adet tek kaynaktan türetilmelidir.
+- **Sonuç:** Açma önce dosya içi malzemelerle tüm geometriyi doğrular. Yerel katalogdaki aynı kimlik farklı tanımsa yerel kayıt korunur, proje malzemesine yeni kimlik verilir ve yerleşimler atomik eşlenir.
+
+## D-027 — Kaydedilmemiş durumun içerik parmak iziyle izlenmesi
+
+- **Tarih:** 2026-11-08
+- **Durum:** Kabul
+- **Karar:** Değişiklik durumu, proje adını, motifi, minimum aralığı, kullanılan malzeme tanımlarını ve yerleşimleri içeren kanonik parmak izinin son kayıt/açma anıyla karşılaştırılmasından türetilir.
+- **Gerekçe:** Basit bir değişti bayrağı, kullanıcı undo ile kayıt anına döndüğünde yanlış kalır.
+- **Sonuç:** Kaydetme ve geçerli açma yeni tabanı kurar; undo/redo içerik gerçekten kayıt anına dönerse gösterge otomatik temizlenir. Kimlik ve tarih üst bilgileri parmak izine dahil edilmez.
+
+## D-028 — Görsel çıktının ekran görüntüsü yerine kanonik geometriden çizilmesi
+
+- **Tarih:** 2026-11-08
+- **Durum:** Kabul
+- **Karar:** PNG/JPEG çıktısı Konva sahnesinin ekran görüntüsü olmayacak; yerleşimler mm koordinatları, katalog ölçüleri ve dönüşleriyle ayrı Canvas'a çizilecek.
+- **Gerekçe:** Zoom/pan, cetvel, ızgara, seçim ve önizleme çıktı içeriğini veya çözünürlüğünü etkilememelidir.
+- **Sonuç:** Alan motif kılavuzu ya da döndürülmüş gerçek geometri sınırlarından seçilir; piksel boyutu `mm × DPI / 25,4` olur. PNG şeffaf olabilir, JPEG zemin/kalite kullanır; DPI metadata yazımı garanti edilmez.
+
+## D-029 — Tarayıcı çıktı ve dosya güvenlik sınırları
+
+- **Tarih:** 2026-11-08
+- **Durum:** Kabul
+- **Karar:** Proje okuma 10 MB; görsel çıktı tek kenarda 16.384 piksel ve toplamda 64 milyon piksel ile sınırlanacak.
+- **Gerekçe:** Büyük veya kötü niyetli girdilerin tarayıcı belleğini tüketmesini ve Canvas oluşturma hatalarını öngörülebilir biçimde önlemek.
+- **Sonuç:** Aşan işlem başlamadan Türkçe uyarıyla reddedilir. Tahmini RGBA bellek kullanıcıya gösterilir.
+
+## D-030 — Alan seçiminde pozitif gerçek geometri kesişimi
+
+- **Tarih:** 2026-11-08
+- **Durum:** Kabul
+- **Karar:** Seçim dikdörtgeniyle gerçek daire/çokgen geometrisi pozitif alanda kesişen boncuk seçilecek; yalnız sınır teması seçilmeyecek.
+- **Gerekçe:** Kısmi seçim için tutarlı davranış sağlamak ve döndürülmüş nesnelerde yalnız merkez/AABB yaklaşımının yanlış seçimlerini önlemek.
+- **Sonuç:** Ekran dikdörtgeni önce dünya mm koordinatına çevrilir; zoom/pan sonucu etkilemez. Bir grup üyesinin seçimi bütün gruba genişler.
+
+## D-031 — Toplu işlemlerde delta komutu ve atomik doğrulama
+
+- **Tarih:** 2026-11-08
+- **Durum:** Kabul
+- **Karar:** Toplu ekleme/silme/güncelleme yalnız etkilenen önce/sonra dizilerini komutta taşıyacak; bütün aday proje geçmeden komut uygulanmayacak.
+- **Gerekçe:** Tam proje anlık görüntülerinin bellek maliyetini önlerken tek adımlı undo/redo ve kısmi uygulamama garantisi sağlamak.
+- **Sonuç:** Taşıma, döndürme, çoğaltma, hizalama ve dağıtma tek geçmiş adımıdır. Tek bir çakışma bütün işlemi reddeder.
+
+## D-032 — İç içe olmayan kalıcı gruplar ve JSON 1.1
+
+- **Tarih:** 2026-11-08
+- **Durum:** Kabul
+- **Karar:** Grup, benzersiz kimlik ve en az iki `placementId` taşıyacak; yerleşim en fazla bir gruba üye olacak. Gruplar ve klavye adımları proje şeması `1.1` içinde saklanacak.
+- **Gerekçe:** Grup davranışının yalnız görsel kalmaması ve proje turunda kaybolmaması.
+- **Sonuç:** `1.0` dosyaları boş grup ve `0,5/5 mm` adımlarıyla `1.1` modeline taşınır. Bilinmeyen sürüm veya çakışan grup üyeliği reddedilir.
+
+## D-033 — Tam-proje doğrulamasında sıralı AABB etkin kümesi
+
+- **Tarih:** 2026-11-08
+- **Durum:** Kabul
+- **Karar:** Bütün proje doğrulaması geometrileri bir kez üretip AABB `minX` değerine göre sıralayacak; yalnız X aralığı minimum boşluk içinde kalan etkin adaylar kesin teste girecek.
+- **Gerekçe:** Toplu işlemlerde binlerce uzak nesne için karesel çift taramasını azaltmak.
+- **Sonuç:** Kesin SAT/daire/uzaklık kararları değişmez. 5.000 uzak nesneli bütün proje otomatik testle doğrulanır.
+
 ## Açık kararlar
 
-- Aşama 2: Malzeme görselinin JSON'a gömülmesi veya ayrı varlık olarak paketlenmesi
-- Aşama 3: Geri alma geçmişinde komut/diff/anlık görüntü tercihi ve üst sınır
-- Aşama 3: Performans ölçümüne göre uzamsal indeks seçimi
-- Aşama 5: AI sağlayıcısı ve yapılandırılmış çıktı yöntemi
+- Aşama 6: AI sağlayıcısı ve yapılandırılmış çıktı yöntemi
 

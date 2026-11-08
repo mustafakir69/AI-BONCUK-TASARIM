@@ -10,7 +10,7 @@ Görevler:
 
 - P0.1 Ürün amacı, kullanıcılar, kapsam içi/dışı maddeler ve başarı ölçütleri
 - P0.2 Frontend/backend sınırları ve katmanlı mimari
-- P0.3 Malzeme, yerleşim, çalışma alanı ve proje şemaları
+- P0.3 Malzeme, yerleşim, hedef motif ve proje şemaları
 - P0.4 Döndürülmüş şekiller, daireler, sınır ve minimum aralık yaklaşımı
 - P0.5 AI girdi/çıktı sözleşmesi ve güvenlik sınırları
 - P0.6 Aşamaları küçük, test edilebilir görevlere ayırma
@@ -30,16 +30,17 @@ Görevler:
 - P1.2 Sıkı TypeScript, lint, format ve Vitest ayarları
 - P1.3 Uygulama kabuğu ve Türkçe metin altyapısı
 - P1.4 Üst araç çubuğu, sol/orta/sağ panel yerleşimi
-- P1.5 Genişlik/yükseklik ve mm/cm giriş modeli
+- P1.5 Hedef motif genişlik/yükseklik ve mm/cm giriş modeli
 - P1.6 Saf mm/cm dönüşüm yardımcıları ve birim testleri
-- P1.7 Boş Konva çalışma alanı, açık gri zemin ve ekrana sığdırma
-- P1.8 Görünüm durumu: zoom/pan; fiziksel modelden ayrım
+- P1.7 Açık gri sonsuz Konva düzlemi, negatif koordinatlar ve motif kılavuzu
+- P1.8 Saf dünya/ekran dönüşümleri; zoom/pan ve imleç koordinatı
+- P1.8A Sabit yatay/dikey milimetrik cetveller ve zoom uyumlu işaret aralıkları
 - P1.9 Temel erişilebilirlik ve farklı pencere boyutlarında düzen
 - P1.10 README kurulum/çalıştırma/test komutlarını güncelleme
 
-**Çıkış ölçütü:** Kullanıcı alan ölçülerini seçebilir; boş alan doğru en-boy oranıyla görünür; zoom/pan fiziksel ölçüyü değiştirmez; test ve üretim derlemesi geçer. Malzeme ekleme yoktur.
+**Çıkış ölçütü:** Kullanıcı hedef motif ölçülerini seçebilir; sonsuz düzlem, cetvel ve kılavuz aynı mm dönüşümünü kullanır; zoom/pan fiziksel koordinatları değiştirmez; test ve üretim derlemesi geçer. Malzeme ekleme yoktur.
 
-**Doğrulama:** Birim testleri, bileşen duman testi, `typecheck`, üretim derlemesi ve 200×250 / 300×400 / 100×150 mm elle kontrolü.
+**Doğrulama:** Birim testleri, bileşen duman testi, farklı zoom/pan ve negatif koordinat vakaları, `typecheck`, üretim derlemesi ve 200×250 / 300×400 / 100×150 mm motif kontrolü.
 
 ## Aşama 2 — Malzeme sistemi
 
@@ -94,75 +95,79 @@ Görevler:
 
 Görevler:
 
-- P4.1 JSON V1 çalışma zamanı şeması
-- P4.2 Atomik proje içe aktarma ve anlaşılır hata listesi
-- P4.3 JSON indirme ve dosyadan açma
-- P4.4 Kaydet-aç turu testleri
-- P4.5 Sürüm göçü altyapısı ve örnek eski sürüm testi
-- P4.6 Konva'dan yüksek çözünürlüklü JPEG önizleme
-- P4.7 JPEG indirme ve zemin/ölçek seçenekleri
-- P4.8 Büyük dosya ve bozuk dosya sınır testleri
+- [x] P4.1 JSON V1 çalışma zamanı şeması
+- [x] P4.2 Atomik proje içe aktarma ve anlaşılır Türkçe hata
+- [x] P4.3 JSON indirme ve dosyadan açma
+- [x] P4.4 Kaydet-aç turu, negatif koordinat ve dönüş testleri
+- [x] P4.5 Bilinmeyen sürümü güvenli reddetme ve gelecekteki göç sınırı
+- [x] P4.6 Görünümden bağımsız yüksek çözünürlüklü PNG/JPEG çizimi
+- [x] P4.7 Motif/yerleşim alanı, DPI, zemin, şeffaflık ve kalite seçenekleri
+- [x] P4.8 Büyük çıktı, büyük/bozuk dosya ve atomiklik sınır testleri
+- [x] P4.9 Kayıt anına göre değişiklik takibi ve yeni proje güvenlik onayı
+- [x] P4.10 UTF-8 BOM'lu CSV malzeme adet raporu
 
 **Çıkış ölçütü:** Bir proje veri kaybı olmadan JSON turu yapar; geçersiz dosya mevcut projeyi bozmaz; güncel tasarım JPEG olarak indirilebilir.
 
 **Doğrulama:** Altın JSON dosyaları, tur testi, bozuk giriş testleri ve JPEG boyut/görsel duman kontrolü.
 
-## Aşama 5 — Yazılı komutla yapay zekâ
+## Aşama 5 — Gelişmiş boncuk düzenleme araçları
 
-**Amaç:** Kullanıcı komutundan yalnız doğrulanmış, düzenlenebilir yerleşim üretmek.
+**Amaç:** Büyük manuel tasarımlarda çoklu seçim ve atomik toplu düzenleme sağlamak.
 
 Görevler:
 
-- P5.1 Sağlayıcı ve yapılandırılmış çıktı araştırma deneyi
-- P5.2 FastAPI iskeleti, yapılandırma ve sağlık uç noktası
-- P5.3 İstek/öneri şemaları ve limitler
-- P5.4 Sağlayıcı bağımsız `DesignGenerator` arayüzü
-- P5.5 Komuttan izinli malzeme/kısıt çözümleme
-- P5.6 Katı yapılandırılmış çıktı ve hata eşleme
-- P5.7 Sunucu geometri doğrulaması ve ortak altın vakalar
-- P5.8 Sınırlı yeniden deneme/onarım politikası
-- P5.9 Frontend önizleme, kabul ve reddetme akışı
-- P5.10 Gerçek nesnelerden kısıt ve adet doğrulaması
-- P5.11 Zaman aşımı, maliyet, log ve gizlilik kontrolleri
+- [x] P5.1 Shift, alan ve Ctrl+A ile çoklu seçim
+- [x] P5.2 Dünya koordinatında atomik toplu taşıma ve klavye adımları
+- [x] P5.3 Kopyala/yapıştır/çoğalt ve hassas tekrarlı çoğaltma
+- [x] P5.4 Kalıcı grup modeli, grup seçimi, taşıma ve ortak merkezde dönüş
+- [x] P5.5 Gerçek döndürülmüş sınırlara göre hizalama ve eşit dağıtma
+- [x] P5.6 Delta tabanlı tek adımlı undo/redo toplu komutları
+- [x] P5.7 JSON `1.1` grup/ayar şeması ve `1.0` geçişi
+- [x] P5.8 AABB sıralı tam-proje doğrulaması ve 5.000 nesne testleri
+- [x] P5.9 Responsive Türkçe gelişmiş araç paneli ve klavye kısayolları
 
-**Çıkış ölçütü:** Katalog dışı, çakışan veya alan dışı AI önerisi projeye giremez; geçerli öneri tek işlemle kabul edilip manuel düzenlenebilir.
+**Çıkış ölçütü:** Çoklu/gruplu işlemler kısmi uygulanmaz, geometriyi gevşetmez ve tek undo/redo adımıdır; gruplar JSON turunda korunur.
 
-**Doğrulama:** Sahte sağlayıcı testleri, şema/geometri hata vakaları, frontend-backend uyumluluk testleri ve kontrollü sağlayıcı denemesi.
+**Doğrulama:** Seçim, toplu komut, grup, hizalama, JSON geçişi ve 5.000 nesneli performans testleri.
 
-## Aşama 6 — Referans görsel analizi
+## Aşama 6 — Yazılı komutla yapay zekâ
+
+Kullanıcı onayı alınmadan başlanmayacaktır. Önceki sağlayıcı/şema planı bu aşamaya ertelenmiştir.
+
+## Aşama 7 — Referans görsel analizi
 
 **Amaç:** JPEG/PNG motifini, seçili gerçek malzemelerle yaklaşık ve düzenlenebilir tasarıma dönüştürmek.
 
 Görevler:
 
-- P6.1 Temsili veri seti ve başarı ölçütü tanımı
-- P6.2 Dosya türü/boyutu/çözünürlük doğrulaması
-- P6.3 Arka plan ayırma ve motif maskesi prototipi
-- P6.4 Siluet/kenar/renk bölgesi çıkarımı deneyi
-- P6.5 Fiziksel alana ölçekleme ve yoğunluk kontrolü
-- P6.6 Seçili malzemelerle yerleşim sezgiseli
-- P6.7 Ortak geometri doğrulama/onarım hattı
-- P6.8 Kalite uyarısı ve kullanıcı ayarlama akışı
-- P6.9 Gizlilik, silme ve sağlayıcı politikası
+- P7.1 Temsili veri seti ve başarı ölçütü tanımı
+- P7.2 Dosya türü/boyutu/çözünürlük doğrulaması
+- P7.3 Arka plan ayırma ve motif maskesi prototipi
+- P7.4 Siluet/kenar/renk bölgesi çıkarımı deneyi
+- P7.5 Fiziksel alana ölçekleme ve yoğunluk kontrolü
+- P7.6 Seçili malzemelerle yerleşim sezgiseli
+- P7.7 Ortak geometri doğrulama/onarım hattı
+- P7.8 Kalite uyarısı ve kullanıcı ayarlama akışı
+- P7.9 Gizlilik, silme ve sağlayıcı politikası
 
 **Çıkış ölçütü:** Temsili örneklerde düzenlenebilir ve kurallara uygun yaklaşık yerleşim üretilir; kusursuzluk iddiası olmadan kalite/sınırlamalar kullanıcıya gösterilir.
 
 **Doğrulama:** Etiketli örnek seti, siluet benzerliği ve geçerli yerleşim oranı; uzman kullanıcı değerlendirmesi.
 
-## Aşama 7 — Ticari sürüm
+## Aşama 8 — Ticari sürüm
 
 **Amaç:** Ürünü güvenli, yönetilebilir ve lisanslanabilir bir hizmete dönüştürmek.
 
 Görev kümeleri:
 
-- P7.1 Kimlik doğrulama, yetkilendirme ve hesap yaşam döngüsü
-- P7.2 Bulut proje depolama, kota, yedekleme ve sürümleme
-- P7.3 Abonelik, faturalama ve yetki özellikleri
-- P7.4 Lisans ve kullanım koşulları
-- P7.5 Denetim kayıtları, izleme, hata takibi ve destek
-- P7.6 Güvenlik/gizlilik değerlendirmesi ve veri silme
-- P7.7 Ölçek/perf yük testleri ve felaket kurtarma
-- P7.8 Pilot kullanıcı, kullanılabilirlik ve ticari yayın kontrol listesi
+- P8.1 Kimlik doğrulama, yetkilendirme ve hesap yaşam döngüsü
+- P8.2 Bulut proje depolama, kota, yedekleme ve sürümleme
+- P8.3 Abonelik, faturalama ve yetki özellikleri
+- P8.4 Lisans ve kullanım koşulları
+- P8.5 Denetim kayıtları, izleme, hata takibi ve destek
+- P8.6 Güvenlik/gizlilik değerlendirmesi ve veri silme
+- P8.7 Ölçek/perf yük testleri ve felaket kurtarma
+- P8.8 Pilot kullanıcı, kullanılabilirlik ve ticari yayın kontrol listesi
 
 **Çıkış ölçütü:** Güvenlik, veri, ödeme ve operasyon kontrolleri doğrulanmış; pilot geri bildirimiyle yayın kararı alınmıştır.
 

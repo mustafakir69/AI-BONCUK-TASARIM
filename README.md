@@ -6,7 +6,7 @@ Temel ilke şudur: Sistem yalnızca güzel bir görüntü değil, gerçek fiziks
 
 ## Proje durumu
 
-**Aşama 1 — Temel uygulama ve arayüz tamamlandı.** React/Vite uygulaması; Türkçe üç panelli arayüz, Konva tabanlı boş çalışma alanı, gerçek ölçü girişi, mm/cm dönüşümü, ızgara ve zoom/pan görünümüyle çalışmaktadır. Aşama 2 için kullanıcı onayı beklenmektedir.
+**Aşama 5 — Gelişmiş boncuk düzenleme araçları tamamlandı.** Manuel editör; çoklu/alan seçimi, atomik toplu taşıma ve döndürme, kopyalama/çoğaltma, kalıcı gruplar, geometrik hizalama/dağıtma ve özelleştirilebilir klavye taşımasıyla çalışmaktadır. Aşama 6 için kullanıcı onayı beklenmektedir.
 
 ## Planlanan teknoloji seçimi
 
@@ -20,7 +20,7 @@ Temel ilke şudur: Sistem yalnızca güzel bir görüntü değil, gerçek fiziks
 | Gelecek API | Python + FastAPI | Görüntü işleme ve yapay zekâ ekosistemiyle uyumlu, açık şemalı API geliştirme |
 | Kalıcı proje | Sürümlü JSON | Düzenlenebilir verinin taşınabilir, okunabilir ve doğrulanabilir olması |
 
-Python/FastAPI ilk manuel editör için gerekli değildir ve Aşama 5'e kadar çalışma zamanına eklenmeyecektir. Konva koordinatları ekran içindir; alan modelinin tek fiziksel birimi milimetredir.
+Python/FastAPI ilk manuel editör için gerekli değildir ve Aşama 6'dan önce çalışma zamanına eklenmeyecektir. Konva koordinatları ekran içindir; alan modelinin tek fiziksel birimi milimetredir.
 
 ## Klasör yapısı
 
@@ -43,7 +43,7 @@ Python/FastAPI ilk manuel editör için gerekli değildir ve Aşama 5'e kadar ç
 │   │   ├── app/             # Uygulama kabuğu ve bileşim
 │   │   ├── domain/          # Veri modeli ve saf geometri
 │   │   ├── features/        # Malzemeler, editör, dosyalar vb.
-│   │   ├── infrastructure/  # Tarayıcı dosya/Canvas uyarlayıcıları
+│   │   ├── infrastructure/  # Yerel saklama, tarayıcı dosya/Canvas uyarlayıcıları
 │   │   └── shared/          # Ortak, alan bağımsız parçalar
 │   └── tests/
 └── backend/
@@ -51,7 +51,7 @@ Python/FastAPI ilk manuel editör için gerekli değildir ve Aşama 5'e kadar ç
     └── tests/
 ```
 
-Frontend uygulaması bu katman sınırlarına göre kurulmuştur. Backend dizini, Aşama 5'e kadar uygulama kodu içermez.
+Frontend uygulaması bu katman sınırlarına göre kurulmuştur. Backend dizini, Aşama 6'dan önce uygulama kodu içermez.
 
 ## Belgeler
 
@@ -95,15 +95,29 @@ npm run preview
 ## Mevcut özellikler
 
 - Modern ve responsive Türkçe uygulama kabuğu
-- Sol tarafta Aşama 2 durumu açıkça belirtilen örnek malzeme kütüphanesi
-- Konva tabanlı, fiziksel en-boy oranını koruyan boş çalışma alanı
-- Milimetre/santimetre girişi; içeride yalnız milimetre saklama
-- Görünüm ızgarası, yakınlaştırma, uzaklaştırma, ekrana sığdırma ve kaydırma
-- Sağ tarafta çalışma alanı ayarları, sıfırdan türetilmiş sayaç ve gelecek nesne özellikleri alanı
-- Aşama 3/4 işlemleri için açıkça devre dışı bırakılmış araçlar
+- Sol tarafta eklenebilen, düzenlenebilen ve onayla silinebilen gerçek malzeme kütüphanesi
+- Kare, dikdörtgen, daire ve delikli daire için mm oranlı önizleme, renk ve pul delik çapı doğrulaması
+- Sürümlü LocalStorage kaydı, yenilemede geri yükleme ve bozuk kayıtlar için güvenli kurtarma
+- Dünya koordinatında boncuk yerleştirme, yarı saydam aday önizlemesi, seçim, taşıma, döndürme ve silme
+- SAT, daire/çokgen ve minimum aralık kurallarını uygulayan bağımsız geometri çekirdeği
+- Sağ panelden X/Y/açı düzenleme, gerçek malzeme sayacı ve 100 adımlı geri al/yinele
+- Konva tabanlı, her yöne kaydırılabilen açık gri sonsuz tasarım düzlemi
+- Sabit yatay/dikey cetvel, görünür `(0,0)` orijini ve negatif koordinatlar
+- Motif hedefi için milimetre/santimetre girişi; içeride yalnız milimetre saklama
+- Motif ölçüsünden bağımsız ızgara, yakınlaştırma, uzaklaştırma, motifi ekrana sığdırma ve kaydırma
+- İsteğe bağlı, düzlemi sınırlamayan hedef motif sınır kılavuzu
+- Sağ tarafta motif ayarları, sıfırdan türetilmiş sayaç ve gelecek nesne özellikleri alanı
+- Sürümlü JSON proje indirme/açma, atomik doğrulama ve yerel katalog kimlik çakışmalarında güvenli yeniden eşleme
+- Kayıt anına göre çalışan değişiklik göstergesi; yeni proje ve proje açmada kaydedilmemiş değişiklik onayı
+- Motif veya gerçek döndürülmüş yerleşim sınırından, 150/300/600 DPI ile PNG/JPEG dışa aktarma
+- Şeffaf PNG, JPEG kalite/zemin seçenekleri, boyut/bellek koruması ve UTF-8 BOM'lu CSV malzeme raporu
+- Shift/alan/Ctrl+A ile çoklu seçim; seçili sayısı ve grup birlikte seçim davranışı
+- Tek undo/redo adımlı toplu taşıma, ortak merkezde döndürme, geometrik hizalama ve eşit dağıtma
+- Ctrl+C/V/D, hassas ofset/tekrar çoğaltma, atomik çakışma kontrolü ve işlem limitleri
+- JSON `1.1` içinde kalıcı gruplar ve klavye adımları; `1.0` projeleri için sıkı geriye uyumluluk
 - Birim ve bileşen testleri, sıkı TypeScript, lint ve üretim derlemesi
 
-## Aşama 2'ye geçiş
+## Aşama 6'ya geçiş
 
-Aşama 2; gerçek malzeme veri modeli, başlangıç kataloğu ve malzeme ekleme/düzenleme/silme akışlarını kapsar. Ayrıntılar [docs/ROADMAP.md](docs/ROADMAP.md) içindedir ve başlamadan önce kullanıcı onayı gerekir.
+Aşama 6 planı kullanıcı onayıyla ayrıca netleştirilecektir. Yapay zekâ entegrasyonu Aşama 5 kapsamında yapılmamıştır.
 
