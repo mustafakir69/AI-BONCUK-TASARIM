@@ -168,7 +168,10 @@ Aşama 3'te motif kılavuzu görseldir; bu nedenle `MOTIF_BOUNDS_EXCEEDED` manue
 ```text
 Tür/ölçü/merkez/malzeme/oran/aralık/simetri/tekrar/yoğunluk/seed
   → katı parametre doğrulaması ve yaklaşık kapasite
-  → seed tabanlı desen adayları
+  → eğrilerde poligon yaklaşımı ve kümülatif yay uzunluğu tablosu
+  → katalog boyutu/açısı + hedef aralıkla düzenli, seed tabanlı desen adayları
+  → açık/kapalı yol artığının komşulara deterministik yeniden dağıtılması
+  → çakışan eğri adayında sınırlı komşu teğet gevşetmesi
   → koordinat + açı simetri dönüşümü ve merkez tekilleştirme
   → üretim dikdörtgeni sınırı
   → hücre tabanlı yakın aday ön elemesi
@@ -179,6 +182,8 @@ Tür/ölçü/merkez/malzeme/oran/aralık/simetri/tekrar/yoğunluk/seed
 ```
 
 Üretici React, Konva, DOM ve ağ bilmez. Seed için sabit bir karma ve yerel PRNG kullanır. Hücre indeksi yalnız aday kümesini azaltır; kesin karar `geometriesOverlap` ve `distanceBetweenGeometries` fonksiyonlarından gelir. Başarılı çıktı limiti 5.000, aday limiti 40.000 ve çalışma bütçesi 1.000 ms'dir. Süre/limit aşımı kısmi placement sonucu döndürmez.
+
+`arcLength.ts` yalnız nokta dizisi, kümülatif fiziksel uzunluk ve mesafeden örnekleme bilir; motif türü veya çizim kütüphanesine bağımlı değildir. `targetGapMm` geçici üretim parametresidir. Kalıcı proje ayarı olan `minimumGapMm` son geometri kabulünde uygulanmaya devam eder; bu nedenle Aşama 6.1 proje şemasını değiştirmez.
 
 ## 9.2. Gelecek backend sınırı (Aşama 6 kapsamında değil)
 

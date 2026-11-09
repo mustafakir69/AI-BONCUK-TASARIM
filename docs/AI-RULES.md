@@ -158,3 +158,13 @@ Aşama 6 motoru bir LLM değildir ve ağ çağrısı yapmaz. `frontend/src/domai
 
 Üretim ayarları Aşama 6'da proje şemasına yazılmaz. Uygulanan placement nesneleri mevcut JSON `1.1` modeliyle kaydedilir; böylece `1.0` ve `1.1` geriye uyumluluğu değişmez.
 
+## 14. Aşama 6.1 eğri yerleşim revizyonu
+
+- Halka, spiral, dalga ve çiçek eğrileri `arcLength.ts` içindeki saf kümülatif uzunluk tablosundan örneklenir.
+- Hedef boncuk aralığı görsel yoğunluğu belirler; minimum güvenlik aralığı kesin geometri doğrulamasının ayrı alt sınırıdır.
+- Yoğunluk rastgele aday silmez; deterministik merkez adımını düzenli biçimde büyütür.
+- Merkez adımı seçili malzemenin katalog genişlik/yüksekliğini ve eğri teğetine göre dönüşünü hesaba katar.
+- Açık yol artığı uçlara ortalanır; kapalı yol artığı kapanış dahil komşulara yeniden dağıtılır. Kesin testte çakışan bir eğri adayında önceki/yeni komşu teğet boyunca üç sınırlı deterministik karşılıklı kaydırmayla yeniden sınanır.
+- Üretimden geçen her sonuç yine ortak çakışma ve minimum aralık çekirdeğiyle bütünüyle doğrulanır; geometrik olarak mümkün olmayan aday kabul edilmez.
+- Aynı seed ve parametreler aynı malzeme/konum/açı dizisini üretmeye devam eder.
+

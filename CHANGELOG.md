@@ -4,6 +4,25 @@ Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) yaklaşımın�
 
 ## [Yayımlanmadı]
 
+### Eklendi
+
+- Eğri motifler için saf kümülatif yay uzunluğu örnekleyicisi
+- Motif üretiminde minimum güvenlik aralığından ayrı hedef boncuk aralığı
+- Sol sürükleme, Shift + sol sürükleme, Space + sol ve orta tuş jest kararlarının otomatik testleri
+
+### Değiştirildi
+
+- Seçim modunda boş alandaki sol sürükleme çalışma alanını kaydırır; alan seçimi Shift + sol sürüklemeyle başlar
+- Halka, spiral, dalga ve çiçek adayları eşit parametre adımı yerine fiziksel yay uzunluğuna göre yerleştirilir
+- Yoğunluk artık rastgele boncuk atlamaz; komşu merkez mesafesini düzenli büyütür
+- Karışık malzemelerde aralık, katalog boyutları ve yol teğetine göre dönüş açılarıyla hesaplanır
+- Açık ve kapalı eğri artıkları komşu yerleşimlere deterministik biçimde dağıtılır; kesin testte çakışan eğri adayı önce sınırlı komşu teğet gevşetmesiyle yeniden denenir
+
+### Doğrulandı
+
+- TypeScript, ESLint, 16 dosyada 152 otomatik test ve Vite üretim derlemesi başarılı
+- Tarayıcı üzerinde manuel etkileşim/görsel QA yapılmadı
+
 ### Planlanan
 
 - Aşama 7: Kullanıcı onayı olmadan başlanmayacak referans görsel analizi

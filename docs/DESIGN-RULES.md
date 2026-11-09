@@ -125,6 +125,12 @@ Pul, dış diski üzerinden daire kurallarını kullanır. Bu korumacı yaklaş�
 
 Hızlı AABB, güvenli eleme için her şeklin kutusunu `gap / 2` kadar her yönde genişletebilir. AABB yalnız ön elemedir; kesin karar vermez.
 
+### Üretimde hedef aralık
+
+`targetGapMm`, motif üreticisinin komşu boncuklar arasında amaçladığı görsel boşluktur; `minimumGapMm` ise hiçbir üreticinin gevşetemeyeceği güvenlik alt sınırıdır. Yerleşim adımı en az `max(targetGapMm, minimumGapMm)` kullanır, fakat son kabul kararı yine gerçek dış sınırlar arasındaki kesin `minimumGapMm` doğrulamasıdır.
+
+Eğri motiflerde komşu merkezleri eğri parametresine göre değil yay uzunluğuna göre ilerler. Dikdörtgen/kare için hareket doğrultusundaki yarıçap, gerçek genişlik/yükseklik ve dönüş açısının izdüşümünden; daire/pul için dış yarıçaptan hesaplanır. Kapalı eğride kalan çevre tek bir kapanış boşluğuna bırakılmaz, komşu adımlarına dağıtılır.
+
 ## 8. Sürükleme ve döndürme davranışı
 
 - İşaretçi hareketi boyunca aday konum ayrı etkileşim durumunda tutulur.

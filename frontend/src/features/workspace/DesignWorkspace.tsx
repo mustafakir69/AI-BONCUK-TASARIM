@@ -28,6 +28,7 @@ import type { WorldRect } from "../../domain/editing";
 import type { Material } from "../../domain/material";
 import type { Placement } from "../../domain/placement";
 import type { PlacementValidationResult } from "../../domain/geometry/validation";
+import { resolveWorkspaceGesture } from "../../domain/workspaceGesture";
 import type { EditorMode } from "../editor/useDesignEditor";
 import { Icon } from "../../shared/Icon";
 import { useElementSize } from "../../shared/useElementSize";
@@ -131,6 +132,7 @@ interface PlacementNodesProps {
   viewport: ReturnType<typeof createViewportTransform>;
   pixelsPerMm: number;
   editorMode: EditorMode;
+  panningModifierActive: boolean;
   onMovePlacement(placementId: string, point: PointMm): boolean;
   onSelectPlacement(placementId?: string, additive?: boolean): void;
   validateSelectionMove(placementId: string, point: PointMm): PlacementValidationResult;
@@ -150,6 +152,7 @@ const PlacementNodes = memo(function PlacementNodes({
   viewport,
   pixelsPerMm,
   editorMode,
+  panningModifierActive,
   onMovePlacement,
   onSelectPlacement,
   validateSelectionMove,
@@ -167,7 +170,7 @@ const PlacementNodes = memo(function PlacementNodes({
 
     return (
       <Group
-        draggable={editorMode === "select"}
+        draggable={editorMode === "select" && !panningModifierActive}
         key={placement.id}
         name={`placement-${placement.id}`}
         onClick={(event) => {
@@ -279,6 +282,7 @@ export function DesignWorkspace({
   const [cursorMm, setCursorMm] = useState<PointMm>({ x: 0, y: 0 });
   const [cursorInside, setCursorInside] = useState(false);
   const [isPanning, setIsPanning] = useState(false);
+  const [spacePressed, setSpacePressed] = useState(false);
   const [selectionRectPx, setSelectionRectPx] = useState<{ start: PointPx; end: PointPx } | null>(null);
 
   useEffect(() => {
@@ -286,16 +290,26 @@ export function DesignWorkspace({
       if (event.code === "Space" && !(event.target instanceof Element && event.target.matches("input, textarea, select"))) {
         event.preventDefault();
         spacePressedRef.current = true;
+        setSpacePressed(true);
       }
     };
     const keyUp = (event: KeyboardEvent) => {
-      if (event.code === "Space") spacePressedRef.current = false;
+      if (event.code === "Space") {
+        spacePressedRef.current = false;
+        setSpacePressed(false);
+      }
+    };
+    const resetSpace = () => {
+      spacePressedRef.current = false;
+      setSpacePressed(false);
     };
     window.addEventListener("keydown", keyDown);
     window.addEventListener("keyup", keyUp);
+    window.addEventListener("blur", resetSpace);
     return () => {
       window.removeEventListener("keydown", keyDown);
       window.removeEventListener("keyup", keyUp);
+      window.removeEventListener("blur", resetSpace);
     };
   }, []);
 
@@ -357,18 +371,29 @@ export function DesignWorkspace({
   };
 
   const startPan = (event: KonvaEventObject<MouseEvent | TouchEvent>) => {
-    if (event.target.name() !== "viewport-background") return;
+    const isBackground = event.target.name() === "viewport-background";
     const pointerPx = pointerPosition();
     if (!pointerPx || pointerPx.x < drawableRect.x || pointerPx.y < drawableRect.y) return;
 
     const mouseEvent = event.evt instanceof MouseEvent ? event.evt : null;
-    if (editorMode === "select" && mouseEvent?.button === 0 && !spacePressedRef.current) {
-      selectionStartRef.current = { pointerPx, additive: mouseEvent.shiftKey };
+    const gesture = resolveWorkspaceGesture({
+      editorMode,
+      isBackground,
+      button: mouseEvent?.button ?? 0,
+      shiftKey: mouseEvent?.shiftKey ?? false,
+      spacePressed: spacePressedRef.current,
+      pointerType: mouseEvent ? "mouse" : "touch",
+    });
+    if (gesture === "none") return;
+
+    if (gesture === "select-area") {
+      selectionStartRef.current = { pointerPx, additive: true };
       setSelectionRectPx({ start: pointerPx, end: pointerPx });
       panMovedRef.current = false;
       return;
     }
 
+    event.evt.preventDefault();
     panStartRef.current = { pointerPx, viewCenterMm };
     panMovedRef.current = false;
     setIsPanning(true);
@@ -416,6 +441,7 @@ export function DesignWorkspace({
   };
 
   const finishPan = () => {
+    const moved = panMovedRef.current;
     const selectionStart = selectionStartRef.current;
     const selectionEnd = pointerPosition() ?? selectionRectPx?.end;
     if (selectionStart && selectionEnd && panMovedRef.current) {
@@ -430,6 +456,9 @@ export function DesignWorkspace({
     setSelectionRectPx(null);
     panStartRef.current = null;
     setIsPanning(false);
+    if (moved) window.setTimeout(() => {
+      panMovedRef.current = false;
+    }, 0);
   };
 
   const handleBackgroundClick = () => {
@@ -542,9 +571,11 @@ export function DesignWorkspace({
       >
         <div className="canvas-hint">
           <span className="canvas-hint__key">{editorMode === "place" ? "Tıkla" : "Sürükle"}</span>
-          <span>{editorMode === "place" ? "Boncuğu yerleştir" : "Alan seç"}</span>
+          <span>{editorMode === "place" ? "Boncuğu yerleştir" : "Çalışma alanını kaydır"}</span>
           <span className="canvas-hint__dot" />
-          <span>{editorMode === "select" ? "Boşluk + sürükle ile kaydır" : "Fare tekeriyle yakınlaştır"}</span>
+          <span>{editorMode === "select" ? "Shift + sürükle ile alan seç" : "Boşluk + sürükle ile kaydır"}</span>
+          <span className="canvas-hint__dot" />
+          <span>Fare tekeriyle yakınlaştır</span>
         </div>
         {notice ? <div className="editor-notice" role="status">{notice}</div> : null}
 
@@ -705,6 +736,7 @@ export function DesignWorkspace({
                 materials={materials}
                 onMovePlacement={onMovePlacement}
                 onSelectPlacement={onSelectPlacement}
+                panningModifierActive={spacePressed}
                 pixelsPerMm={pixelsPerMm}
                 placements={placements}
                 selectedIds={selectedIds}

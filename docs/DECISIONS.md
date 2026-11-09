@@ -299,6 +299,22 @@ Bu dosya, mimariyi etkileyen kararları kısa ADR (Architecture Decision Record)
 - **Gerekçe:** Düzenlenebilir projenin otoriter verisi gerçek placement nesneleridir; üretim tarifini tekrar çalıştırma gereksinimi henüz istenmemiştir.
 - **Sonuç:** Şema yükselmez. Aşama 4 `1.0` ve Aşama 5 `1.1` projeleri mevcut sıkı geçiş/doğrulama hattıyla açılmaya devam eder.
 
+## D-038 — Eğri motiflerde yay uzunluğu ve iki ayrı aralık
+
+- **Tarih:** 2026-11-09
+- **Durum:** Kabul
+- **Karar:** Halka, spiral, dalga ve çiçek adayları eşit parametrik adım yerine yoğun bir poligon yaklaşımının kümülatif yay uzunluğu üzerinden yerleştirilecek. `targetGapMm` görsel yoğunluğu, `minimumGapMm` ise gevşetilemeyen kesin güvenlik kuralını temsil edecek.
+- **Gerekçe:** Eğri parametresindeki eşit artış fiziksel mesafede eşit değildir; yoğunluğu rastgele aday atlayarak azaltmak da düzensiz delikler üretir.
+- **Sonuç:** Merkez adımı, komşu malzemelerin katalog boyutları ve teğet açılarına göre hesaplanır. Düşük yoğunluk düzenli aralığı büyütür. Açık eğrinin artığı iki uca paylaştırılır; kapalı eğrinin kapanış artığı bütün komşu adımlarına ölçeklenir. Bir eğri adayı kesin testte çakışırsa önceki ve yeni komşu, teğetleri boyunca üç sınırlı deterministik adımda karşılıklı açılarak tekrar sınanır; bütün denemeler geçersizse aday reddedilir. Kesin çakışma ve minimum aralık doğrulaması değişmez; üretim ayarları geçici kaldığından proje şeması `1.1` olarak kalır.
+
+## D-039 — Seçim modunda birincil boş-alan sürüklemesinin pan olması
+
+- **Tarih:** 2026-11-09
+- **Durum:** Kabul
+- **Karar:** Seçim modunda boş arka plandaki normal sol sürükleme pan, Shift + sol sürükleme alan seçimi olacak. Space + sol, orta tuş ve dokunma pan olarak kalacak; yerleştirme modundaki normal sol tıklama boncuk eklemeyi sürdürecek.
+- **Gerekçe:** Sonsuz düzlemde temel gezinme birincil işaretçiyle erişilebilir olmalı; alan seçimi açık bir değiştiriciyle çakışmadan ayrılmalıdır.
+- **Sonuç:** Jest kararı saf bir yardımcıda test edilir. Boncuk düğümleri olayı durdurduğu için seçme/taşıma pan başlatmaz. Pan ve imleç merkezli zoom yalnız geçici görünüm dönüşümünü değiştirir.
+
 ## Açık kararlar
 
 - Gerçek harici AI sağlayıcısı istenirse sağlayıcı, yapılandırılmış çıktı, gizlilik, maliyet ve backend yöntemi ayrıca kararlaştırılacaktır.

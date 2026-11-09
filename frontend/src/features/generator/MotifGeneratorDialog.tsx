@@ -61,6 +61,7 @@ export function MotifGeneratorDialog({
   const [height, setHeight] = useState(String(motif.heightMm));
   const [centerX, setCenterX] = useState("0");
   const [centerY, setCenterY] = useState("0");
+  const [targetGap, setTargetGap] = useState("1");
   const [minimumGap, setMinimumGap] = useState(String(projectMinimumGapMm));
   const [symmetry, setSymmetry] = useState<MotifSymmetry>("none");
   const [radialRepeats, setRadialRepeats] = useState(6);
@@ -88,13 +89,14 @@ export function MotifGeneratorDialog({
     materials: Object.entries(selectedWeights)
       .filter(([, weight]) => weight > 0)
       .map(([materialId, weight]) => ({ materialId, weight })),
+    targetGapMm: numberValue(targetGap),
     minimumGapMm: effectiveGap,
     symmetry,
     radialRepeats,
     repeatCount: Number(repeatCount),
     densityPercent: density,
     seed,
-  }), [centerX, centerY, density, effectiveGap, height, pattern, radialRepeats, repeatCount, seed, selectedWeights, symmetry, width]);
+  }), [centerX, centerY, density, effectiveGap, height, pattern, radialRepeats, repeatCount, seed, selectedWeights, symmetry, targetGap, width]);
   const requestKey = JSON.stringify(request);
   const estimate = useMemo(() => estimateMotifGeneration(request, materials), [materials, request]);
 
@@ -159,7 +161,8 @@ export function MotifGeneratorDialog({
                 <label><span>Merkez Y (mm)</span><input aria-label="Motif merkezi Y" inputMode="decimal" onChange={(event) => setCenterY(event.target.value)} value={centerY} /></label>
               </div>
               <div className="compact-input-grid">
-                <label><span>Minimum aralık (mm)</span><input aria-label="Üretim minimum aralığı" inputMode="decimal" onChange={(event) => setMinimumGap(event.target.value)} value={minimumGap} /></label>
+                <label><span>Hedef boncuk aralığı (mm)</span><input aria-label="Hedef boncuk aralığı" inputMode="decimal" onChange={(event) => setTargetGap(event.target.value)} value={targetGap} /></label>
+                <label><span>Minimum güvenlik aralığı (mm)</span><input aria-label="Minimum güvenlik aralığı" inputMode="decimal" onChange={(event) => setMinimumGap(event.target.value)} value={minimumGap} /></label>
                 <label><span>Tekrar sayısı</span><input aria-label="Motif tekrar sayısı" min="1" onChange={(event) => setRepeatCount(event.target.value)} type="number" value={repeatCount} /></label>
               </div>
               {Number.isFinite(requestedGap) && requestedGap < projectMinimumGapMm ? (
@@ -253,7 +256,7 @@ export function MotifGeneratorDialog({
               <dl className="generator-report-grid">
                 <div><dt>Gerçek ölçü</dt><dd>{result.report.actualWidthMm.toFixed(2)} × {result.report.actualHeightMm.toFixed(2)} mm</dd></div>
                 <div><dt>Simetri</dt><dd>{SYMMETRY_LABELS[result.report.symmetry]}</dd></div>
-                <div><dt>Minimum aralık</dt><dd>{result.report.minimumGapMm.toLocaleString("tr-TR")} mm</dd></div>
+                <div><dt>Hedef / güvenlik aralığı</dt><dd>{result.report.targetGapMm.toLocaleString("tr-TR")} / {result.report.minimumGapMm.toLocaleString("tr-TR")} mm</dd></div>
                 <div><dt>Aday sonucu</dt><dd>{result.report.acceptedCandidates} başarılı / {result.report.rejectedCandidates} reddedildi</dd></div>
               </dl>
               <ul className="generator-counts">

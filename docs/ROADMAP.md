@@ -150,6 +150,17 @@ Görevler:
 
 **Doğrulama:** Altı motif türü, simetri/açı, seçili malzeme, sınır/aralık, negatif koordinat, atomiklik, undo/redo, JSON turu ve büyük motif testleri.
 
+### Aşama 6.1 — Gezinme ve eğri yerleşimi revizyonu
+
+- [x] Boş alanda sol sürükleme pan; Shift + sol sürükleme alan seçimi
+- [x] Space + sol, orta tuş, dokunma ve imleç merkezli tekerlek zoomunu koruma
+- [x] Halka, spiral, dalga ve çiçekte yay uzunluğuna dayalı yerleşim
+- [x] Hedef boncuk aralığı ile minimum güvenlik aralığını ayırma
+- [x] Karışık malzeme boyutu/açısı ve deterministik komşu yeniden dağıtımı
+- [x] Jest, yay uzunluğu, kapanış aralığı ve kesin geometri testleri
+
+**Çıkış ölçütü:** Gezinme fiziksel koordinatları değiştirmez; eğri yoğunluğu rastgele delik üretmez; son sonuç ortak çakışma ve minimum aralık kurallarını geçer.
+
 ## Aşama 7 — Referans görsel analizi
 
 **Amaç:** JPEG/PNG motifini, seçili gerçek malzemelerle yaklaşık ve düzenlenebilir tasarıma dönüştürmek.

@@ -4,7 +4,7 @@ Durum işaretleri: `[ ]` yapılacak, `[~]` devam ediyor, `[x]` tamamlandı, `[!]
 
 ## Mevcut aşama
 
-**Aşama 6 — Akıllı motif üretim motoru: tamamlandı (2026-11-09).**
+**Aşama 6.1 — Serbest gezinme ve düzenli eğri yerleşimi revizyonu: tamamlandı (2026-11-09).**
 
 ### Tamamlanan işler
 
@@ -303,6 +303,38 @@ Kullanıcı onayı 2026-11-09 tarihinde alındı.
 - Malzeme oranları hedef dağılımdır; geometri nedeniyle reddedilen adaylar kesin oranı değiştirebilir.
 - Üretim ayarları projede saklanmaz; yalnız uygulanan düzenlenebilir placement sonuçları saklanır.
 - Araç geometrik ve deterministiktir; doğal dil, LLM, bulut AI veya referans görsel analizi içermez.
+
+## Aşama 6.1 — Tamamlanan revizyon
+
+- [x] P6.1.1 Seçim modunda boş alandaki sol sürüklemeyi serbest pan hareketine çevirmek
+- [x] P6.1.2 Space + sol sürükleme, orta tuş ve dokunmatik pan davranışını korumak
+- [x] P6.1.3 Alan seçimini Shift + sol sürüklemeye taşımak; boncuk tıklama/sürüklemeyi korumak
+- [x] P6.1.4 İmleç merkezli tekerlek zoomunun yalnız görünüm dönüşümünü değiştirdiğini doğrulamak
+- [x] P6.1.5 Eğri motifleri bağımsız, saf yay uzunluğu tablosuyla örneklemek
+- [x] P6.1.6 Hedef boncuk aralığını minimum güvenlik aralığından ayrı parametre ve arayüz alanı yapmak
+- [x] P6.1.7 Karışık malzeme boyutları ve teğet açılarıyla merkez mesafesini hesaplamak
+- [x] P6.1.8 Açık eğride artık mesafeyi iki uca, kapalı eğride kapanış artığını bütün komşulara dağıtmak
+- [x] P6.1.9 Yoğunluğu rastgele delikler yerine düzenli merkez mesafesi çarpanı olarak uygulamak
+- [x] P6.1.10 Kesin çakışma/minimum aralık çekirdeğini ve seed tekrarlanabilirliğini korumak
+- [x] P6.1.11 Jest, yay uzunluğu, kapanış boşluğu, karışık malzeme ve aralık testlerini eklemek
+
+### Aşama 6.1 kabul ölçütleri
+
+- [x] Boş alanda sol sürükleme, Space + sol sürükleme ve orta tuş çalışma alanını kaydırır
+- [x] Shift + sol sürükleme alan seçer; boncuk seçme ve taşıma davranışı değişmez
+- [x] Pan/zoom yalnız görünüm merkezini ve ölçeğini değiştirir; placement mm koordinatlarına yazmaz
+- [x] Halka kapanışı ve eğri üzerindeki adaylar yay uzunluğuna göre dengeli dağılır
+- [x] Hedef aralık yoğunluğu yönetir; minimum güvenlik aralığı kesin doğrulama eşiği olarak kalır
+- [x] Karışık/döndürülmüş malzemeler katalog ölçüleriyle hesaplanır ve son doğrulamadan geçer
+- [x] Geometrik olarak geçersiz adaylar kalıcı sonuca alınmaz
+
+### Aşama 6.1 doğrulama sonucu
+
+- [x] `npm run typecheck`
+- [x] `npm run lint`
+- [x] `npm test` — 16 dosya, 152 test
+- [x] `npm run build` — Vite üretim çıktısı başarılı
+- [!] Tarayıcı üzerinde manuel etkileşim/görsel QA bu çalışma oturumunda yapılmadı; jest kararları, koordinat dönüşümleri, bileşen testleri ve üretim derlemesiyle doğrulandı
 
 ## Onay bekleyen aşama
 

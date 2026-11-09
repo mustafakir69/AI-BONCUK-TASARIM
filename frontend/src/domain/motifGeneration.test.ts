@@ -20,6 +20,7 @@ function request(overrides: Partial<MotifGenerationRequest> = {}): MotifGenerati
     centerXmm: 0,
     centerYmm: 0,
     materials: [{ materialId: "mat-seed-bead", weight: 1 }],
+    targetGapMm: 1,
     minimumGapMm: 0.5,
     symmetry: "none",
     radialRepeats: 6,
@@ -47,13 +48,17 @@ describe("deterministik motif üretimi", () => {
     expect(first.placements).toEqual(second.placements);
   });
 
-  it("farklı tohumla yoğunluk örneklemesini değiştirir", () => {
-    const first = generateMotif(request({ seed: "a", densityPercent: 55 }), catalog);
-    const second = generateMotif(request({ seed: "b", densityPercent: 55 }), catalog);
+  it("farklı tohumla karışık malzeme dağılımını değiştirir", () => {
+    const materials = [
+      { materialId: "mat-seed-bead", weight: 1 },
+      { materialId: "mat-pearl", weight: 1 },
+    ];
+    const first = generateMotif(request({ seed: "a", densityPercent: 55, materials }), catalog);
+    const second = generateMotif(request({ seed: "b", densityPercent: 55, materials }), catalog);
     expect(first.ok && second.ok).toBe(true);
     if (!first.ok || !second.ok) return;
-    expect(first.placements.map(({ xMm, yMm }) => [xMm, yMm]))
-      .not.toEqual(second.placements.map(({ xMm, yMm }) => [xMm, yMm]));
+    expect(first.placements.map(({ materialId, xMm, yMm }) => [materialId, xMm, yMm]))
+      .not.toEqual(second.placements.map(({ materialId, xMm, yMm }) => [materialId, xMm, yMm]));
   });
 
   it("yalnız seçilen katalog malzemelerini kullanır", () => {
@@ -85,6 +90,54 @@ describe("deterministik motif üretimi", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(validateAllPlacements(result.placements, catalog, 3).valid).toBe(true);
+  });
+
+  it("hedef aralığı güvenlik aralığından ayrı uygular", () => {
+    const compact = generateMotif(request({ pattern: "ring", repeatCount: 1, targetGapMm: 0.5 }), catalog);
+    const spaced = generateMotif(request({ pattern: "ring", repeatCount: 1, targetGapMm: 4 }), catalog);
+    expect(compact.ok && spaced.ok).toBe(true);
+    if (!compact.ok || !spaced.ok) return;
+    expect(spaced.placements.length).toBeLessThan(compact.placements.length);
+    expect(spaced.report.targetGapMm).toBe(4);
+    expect(spaced.report.minimumGapMm).toBe(0.5);
+    expect(validateAllPlacements(spaced.placements, catalog, 0.5).valid).toBe(true);
+  });
+
+  it("kapalı halkadaki artan yay uzunluklarını kapanış boşluğu dahil dengeler", () => {
+    const result = generateMotif(request({
+      pattern: "ring",
+      repeatCount: 1,
+      widthMm: 120,
+      heightMm: 120,
+      targetGapMm: 1,
+      materials: [{ materialId: "mat-pearl", weight: 1 }],
+    }), catalog);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const distances = result.placements.map((placement, index, placements) => {
+      const next = placements[(index + 1) % placements.length]!;
+      return Math.hypot(next.xMm - placement.xMm, next.yMm - placement.yMm);
+    });
+    expect(Math.max(...distances) / Math.min(...distances)).toBeLessThan(1.02);
+  });
+
+  it("karışık ve döndürülmüş malzemelerde gerçek katalog ölçüleriyle güvenli sonuç üretir", () => {
+    const result = generateMotif(request({
+      pattern: "flower",
+      widthMm: 140,
+      heightMm: 120,
+      targetGapMm: 1.5,
+      minimumGapMm: 1,
+      materials: [
+        { materialId: "mat-bugle-bead", weight: 2 },
+        { materialId: "mat-pearl", weight: 1 },
+        { materialId: "mat-sequin", weight: 1 },
+      ],
+    }), catalog);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(new Set(result.placements.map((placement) => placement.materialId)).size).toBeGreaterThan(1);
+    expect(validateAllPlacements(result.placements, catalog, 1).valid).toBe(true);
   });
 
   it("yatay ayna simetrisinde koordinatı ve açıyı dönüştürür", () => {
@@ -178,6 +231,7 @@ describe("deterministik motif üretimi", () => {
   it.each([
     { widthMm: 0 },
     { heightMm: Number.NaN },
+    { targetGapMm: -1 },
     { minimumGapMm: -1 },
     { densityPercent: 101 },
     { repeatCount: 0 },

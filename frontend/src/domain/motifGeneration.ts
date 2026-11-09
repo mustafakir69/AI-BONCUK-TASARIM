@@ -5,6 +5,7 @@ import { createPlacementGeometry, degreesToRadians, rotatePoint } from "./geomet
 import { validateAllPlacements } from "./geometry/validation";
 import type { Material } from "./material";
 import { countPlacementsByMaterial, normalizeRotation, type Placement } from "./placement";
+import { createArcLengthTable, sampleArcLength, type ArcPoint } from "./arcLength";
 
 export const MOTIF_PATTERN_TYPES = ["line", "ring", "spiral", "wave", "flower", "geometric"] as const;
 export type MotifPatternType = (typeof MOTIF_PATTERN_TYPES)[number];
@@ -26,6 +27,7 @@ export interface MotifGenerationRequest {
   centerXmm: number;
   centerYmm: number;
   materials: WeightedMaterialSelection[];
+  targetGapMm: number;
   minimumGapMm: number;
   symmetry: MotifSymmetry;
   radialRepeats: number;
@@ -60,6 +62,7 @@ export interface MotifGenerationReport {
   actualWidthMm: number;
   actualHeightMm: number;
   symmetry: MotifSymmetry;
+  targetGapMm: number;
   minimumGapMm: number;
   acceptedCandidates: number;
   rejectedCandidates: number;
@@ -75,6 +78,7 @@ export interface PatternCandidate {
   x: number;
   y: number;
   rotationDeg: number;
+  materialId?: string;
 }
 
 interface IndexedPlacement {
@@ -112,6 +116,9 @@ export function validateMotifGenerationRequest(
   }
   if (!Number.isFinite(request.minimumGapMm) || request.minimumGapMm < 0 || request.minimumGapMm > 100) {
     errors.push("Minimum boncuk aralığı 0–100 mm arasında olmalıdır.");
+  }
+  if (!Number.isFinite(request.targetGapMm) || request.targetGapMm < 0 || request.targetGapMm > 100) {
+    errors.push("Hedef boncuk aralığı 0–100 mm arasında olmalıdır.");
   }
   if (!Number.isInteger(request.repeatCount) || request.repeatCount < 1 || request.repeatCount > MAX_REPEAT_COUNT) {
     errors.push(`Tekrar sayısı 1–${MAX_REPEAT_COUNT} arasında tam sayı olmalıdır.`);
@@ -183,7 +190,7 @@ export function estimateMotifGeneration(
   const errors = validateMotifGenerationRequest(request, catalog);
   if (errors.length > 0) return { estimatedCount: 0, capacity: 0, suitable: false, warnings: [], errors };
   const selected = catalog.filter((material) => request.materials.some((item) => item.materialId === material.id));
-  const pitch = maxMaterialDiameter(selected) + request.minimumGapMm;
+  const pitch = maxMaterialDiameter(selected) + Math.max(request.targetGapMm, request.minimumGapMm);
   const areaCapacity = Math.max(1, Math.floor((request.widthMm * request.heightMm) / Math.max(1, pitch * pitch)));
   const pathFactor = request.pattern === "geometric" ? 1 : request.pattern === "line" ? 0.18 : 0.38;
   const estimatedCount = Math.min(
@@ -194,6 +201,7 @@ export function estimateMotifGeneration(
   if (request.widthMm < pitch || request.heightMm < pitch) warnings.push("Seçilen malzeme motif ölçülerine sığmayabilir.");
   if (estimatedCount >= limits.maxPlacements) warnings.push(`Tahmin güvenlik sınırı olan ${limits.maxPlacements.toLocaleString("tr-TR")} boncuğa ulaşıyor.`);
   if (request.minimumGapMm > Math.min(request.widthMm, request.heightMm) / 4) warnings.push("Minimum aralık motif ölçüsüne göre çok büyük.");
+  if (request.targetGapMm < request.minimumGapMm) warnings.push("Hedef aralık, güvenlik aralığından küçük olduğu için güvenlik aralığı kullanılacak.");
   return { estimatedCount, capacity: Math.min(areaCapacity, limits.maxPlacements), suitable: warnings.length === 0, warnings, errors: [] };
 }
 
@@ -203,103 +211,231 @@ function pushLimited(target: PatternCandidate[], candidate: PatternCandidate, li
   return true;
 }
 
-function patternCandidates(request: MotifGenerationRequest, pitch: number, limit: number): PatternCandidate[] {
+interface PatternPath {
+  points: ArcPoint[];
+  closed: boolean;
+}
+
+interface PathItem {
+  materialId: string;
+  desiredGapFromPrevious: number;
+}
+
+function curvePoints(count: number, pointAt: (ratio: number) => ArcPoint, closed: boolean): ArcPoint[] {
+  const points: ArcPoint[] = [];
+  const last = closed ? count - 1 : count;
+  for (let index = 0; index <= last; index += 1) points.push(pointAt(index / count));
+  return points;
+}
+
+function patternPaths(
+  request: MotifGenerationRequest,
+  usableHalfWidth: number,
+  usableHalfHeight: number,
+): PatternPath[] {
+  if (request.pattern === "line") {
+    return Array.from({ length: request.repeatCount }, (_, line) => {
+      const y = request.repeatCount === 1
+        ? 0
+        : -usableHalfHeight + 2 * usableHalfHeight * line / (request.repeatCount - 1);
+      return { points: [{ x: -usableHalfWidth, y }, { x: usableHalfWidth, y }], closed: false };
+    });
+  }
+  if (request.pattern === "ring") {
+    return Array.from({ length: request.repeatCount }, (_, index) => {
+      const ratio = (index + 1) / request.repeatCount;
+      return {
+        points: curvePoints(720, (value) => {
+          const angle = 2 * Math.PI * value;
+          return { x: usableHalfWidth * ratio * Math.cos(angle), y: usableHalfHeight * ratio * Math.sin(angle) };
+        }, true),
+        closed: true,
+      };
+    });
+  }
+  if (request.pattern === "spiral") {
+    const sampleCount = Math.min(8_000, Math.max(720, request.repeatCount * 360));
+    return [{
+      points: curvePoints(sampleCount, (ratio) => {
+        const angle = 2 * Math.PI * request.repeatCount * ratio;
+        return {
+          x: usableHalfWidth * ratio * Math.cos(angle),
+          y: usableHalfHeight * ratio * Math.sin(angle),
+        };
+      }, false),
+      closed: false,
+    }];
+  }
+  if (request.pattern === "wave") {
+    const sampleCount = Math.min(8_000, Math.max(720, request.repeatCount * 240));
+    return [{
+      points: curvePoints(sampleCount, (ratio) => ({
+        x: -usableHalfWidth + 2 * usableHalfWidth * ratio,
+        y: usableHalfHeight * Math.sin(2 * Math.PI * request.repeatCount * ratio),
+      }), false),
+      closed: false,
+    }];
+  }
+  if (request.pattern === "flower") {
+    const petals = Math.max(3, request.repeatCount);
+    const sampleCount = Math.min(8_000, Math.max(720, petals * 240));
+    return [{
+      points: curvePoints(sampleCount, (ratio) => {
+        const angle = 2 * Math.PI * ratio;
+        const radius = 0.62 + 0.38 * Math.cos(petals * angle);
+        return {
+          x: usableHalfWidth * radius * Math.cos(angle),
+          y: usableHalfHeight * radius * Math.sin(angle),
+        };
+      }, true),
+      closed: true,
+    }];
+  }
+  return [];
+}
+
+function materialRadiusAlong(
+  material: Material,
+  materialRotationDeg: number,
+  directionDeg: number,
+): number {
+  if (material.shape === "circle" || material.shape === "ring") return material.widthMm / 2;
+  const relative = degreesToRadians(directionDeg - materialRotationDeg);
+  return Math.abs(Math.cos(relative)) * material.widthMm / 2 +
+    Math.abs(Math.sin(relative)) * material.heightMm / 2;
+}
+
+function desiredCenterDistance(
+  previous: Material,
+  previousRotationDeg: number,
+  next: Material,
+  nextRotationDeg: number,
+  directionDeg: number,
+  request: MotifGenerationRequest,
+): number {
+  const physicalGap = Math.max(request.targetGapMm, request.minimumGapMm);
+  const densityFactor = 100 / request.densityPercent;
+  return (
+    materialRadiusAlong(previous, previousRotationDeg, directionDeg) +
+    materialRadiusAlong(next, nextRotationDeg, directionDeg) +
+    physicalGap
+  ) * densityFactor;
+}
+
+function samplePathCandidates(
+  path: PatternPath,
+  request: MotifGenerationRequest,
+  materialsById: ReadonlyMap<string, Material>,
+  random: () => number,
+  limit: number,
+): PatternCandidate[] {
+  const table = createArcLengthTable(path.points, path.closed);
+  if (table.totalLength <= EPSILON_MM || limit < 1) return [];
+
+  const firstMaterialId = chooseMaterial(request.materials, random);
+  const items: PathItem[] = [{ materialId: firstMaterialId, desiredGapFromPrevious: 0 }];
+  let provisionalDistance = 0;
+  while (items.length < limit) {
+    const previousItem = items.at(-1)!;
+    const previousMaterial = materialsById.get(previousItem.materialId)!;
+    const previousSample = sampleArcLength(table, provisionalDistance);
+    const nextMaterialId = chooseMaterial(request.materials, random);
+    const nextMaterial = materialsById.get(nextMaterialId)!;
+    const approximateNext = sampleArcLength(table, provisionalDistance + previousMaterial.widthMm + nextMaterial.widthMm);
+    const gap = desiredCenterDistance(
+      previousMaterial,
+      previousSample.rotationDeg,
+      nextMaterial,
+      approximateNext.rotationDeg,
+      previousSample.rotationDeg,
+      request,
+    );
+    const nextDistance = provisionalDistance + gap;
+    if (path.closed) {
+      const firstMaterial = materialsById.get(firstMaterialId)!;
+      const closure = desiredCenterDistance(
+        nextMaterial,
+        approximateNext.rotationDeg,
+        firstMaterial,
+        sampleArcLength(table, 0).rotationDeg,
+        approximateNext.rotationDeg,
+        request,
+      );
+      if (nextDistance + closure > table.totalLength + EPSILON_MM) break;
+    } else if (nextDistance > table.totalLength + EPSILON_MM) break;
+    items.push({ materialId: nextMaterialId, desiredGapFromPrevious: gap });
+    provisionalDistance = nextDistance;
+  }
+
+  const firstMaterial = materialsById.get(firstMaterialId)!;
+  let totalDesiredLength = items.slice(1).reduce((sum, item) => sum + item.desiredGapFromPrevious, 0);
+  if (path.closed && items.length > 1) {
+    const lastItem = items.at(-1)!;
+    const lastMaterial = materialsById.get(lastItem.materialId)!;
+    const lastSample = sampleArcLength(table, totalDesiredLength);
+    totalDesiredLength += desiredCenterDistance(
+      lastMaterial,
+      lastSample.rotationDeg,
+      firstMaterial,
+      sampleArcLength(table, 0).rotationDeg,
+      lastSample.rotationDeg,
+      request,
+    );
+  }
+
+  const scale = path.closed && totalDesiredLength > EPSILON_MM
+    ? table.totalLength / totalDesiredLength
+    : 1;
+  const startDistance = path.closed ? 0 : Math.max(0, (table.totalLength - totalDesiredLength) / 2);
+  const result: PatternCandidate[] = [];
+  let distance = startDistance;
+  for (const [index, item] of items.entries()) {
+    if (index > 0) distance += item.desiredGapFromPrevious * scale;
+    const sample = sampleArcLength(table, distance);
+    result.push({ ...sample, materialId: item.materialId });
+  }
+  return result;
+}
+
+function patternCandidates(
+  request: MotifGenerationRequest,
+  pitch: number,
+  limit: number,
+  materialsById: ReadonlyMap<string, Material>,
+  random: () => number,
+): PatternCandidate[] {
   const result: PatternCandidate[] = [];
   const halfWidth = request.widthMm / 2;
   const halfHeight = request.heightMm / 2;
   const usableHalfWidth = Math.max(0, halfWidth - pitch / 2);
   const usableHalfHeight = Math.max(0, halfHeight - pitch / 2);
 
-  if (request.pattern === "line") {
-    const lines = request.repeatCount;
-    for (let line = 0; line < lines; line += 1) {
-      const y = lines === 1 ? 0 : -usableHalfHeight + (2 * usableHalfHeight * line) / (lines - 1);
-      const steps = Math.max(1, Math.floor((2 * usableHalfWidth) / pitch));
-      for (let step = 0; step <= steps; step += 1) {
-        const x = steps === 0 ? 0 : -usableHalfWidth + (2 * usableHalfWidth * step) / steps;
-        if (!pushLimited(result, { x, y, rotationDeg: 0 }, limit)) return result;
+  if (request.pattern !== "geometric") {
+    for (const path of patternPaths(request, usableHalfWidth, usableHalfHeight)) {
+      const candidates = samplePathCandidates(path, request, materialsById, random, limit - result.length);
+      for (const candidate of candidates) {
+        if (!pushLimited(result, candidate, limit)) return result;
       }
     }
     return result;
   }
 
-  if (request.pattern === "ring") {
-    for (let ring = 1; ring <= request.repeatCount; ring += 1) {
-      const ratio = ring / request.repeatCount;
-      const rx = usableHalfWidth * ratio;
-      const ry = usableHalfHeight * ratio;
-      const circumference = 2 * Math.PI * Math.sqrt((rx * rx + ry * ry) / 2);
-      const steps = Math.max(1, Math.floor(circumference / pitch));
-      for (let step = 0; step < steps; step += 1) {
-        const angle = (2 * Math.PI * step) / steps;
-        if (!pushLimited(result, {
-          x: rx * Math.cos(angle), y: ry * Math.sin(angle),
-          rotationDeg: normalizeRotation((angle * 180) / Math.PI + 90),
-        }, limit)) return result;
-      }
-    }
-    return result;
-  }
-
-  if (request.pattern === "spiral") {
-    const turns = request.repeatCount;
-    const approximateLength = Math.PI * turns * Math.max(usableHalfWidth, usableHalfHeight);
-    const steps = Math.max(2, Math.floor(approximateLength / pitch));
-    for (let step = 0; step <= steps; step += 1) {
-      const ratio = step / steps;
-      const angle = 2 * Math.PI * turns * ratio;
-      const x = usableHalfWidth * ratio * Math.cos(angle);
-      const y = usableHalfHeight * ratio * Math.sin(angle);
-      const nextAngle = angle + 0.001;
-      const nextRatio = Math.min(1, ratio + 0.001);
-      const dx = usableHalfWidth * nextRatio * Math.cos(nextAngle) - x;
-      const dy = usableHalfHeight * nextRatio * Math.sin(nextAngle) - y;
-      if (!pushLimited(result, { x, y, rotationDeg: normalizeRotation((Math.atan2(dy, dx) * 180) / Math.PI) }, limit)) return result;
-    }
-    return result;
-  }
-
-  if (request.pattern === "wave") {
-    const steps = Math.max(1, Math.floor((2 * usableHalfWidth) / pitch));
-    for (let step = 0; step <= steps; step += 1) {
-      const ratio = step / steps;
-      const x = -usableHalfWidth + 2 * usableHalfWidth * ratio;
-      const phase = 2 * Math.PI * request.repeatCount * ratio;
-      const y = usableHalfHeight * Math.sin(phase);
-      const slope = usableHalfHeight * Math.cos(phase) * 2 * Math.PI * request.repeatCount / Math.max(EPSILON_MM, 2 * usableHalfWidth);
-      if (!pushLimited(result, { x, y, rotationDeg: normalizeRotation((Math.atan2(slope, 1) * 180) / Math.PI) }, limit)) return result;
-    }
-    return result;
-  }
-
-  if (request.pattern === "flower") {
-    const petals = Math.max(3, request.repeatCount);
-    const circumference = 2 * Math.PI * Math.max(usableHalfWidth, usableHalfHeight);
-    const steps = Math.max(petals * 4, Math.floor(circumference / pitch));
-    for (let step = 0; step < steps; step += 1) {
-      const angle = (2 * Math.PI * step) / steps;
-      const radius = 0.62 + 0.38 * Math.cos(petals * angle);
-      const x = usableHalfWidth * radius * Math.cos(angle);
-      const y = usableHalfHeight * radius * Math.sin(angle);
-      const next = angle + 0.001;
-      const nextRadius = 0.62 + 0.38 * Math.cos(petals * next);
-      const dx = usableHalfWidth * nextRadius * Math.cos(next) - x;
-      const dy = usableHalfHeight * nextRadius * Math.sin(next) - y;
-      if (!pushLimited(result, { x, y, rotationDeg: normalizeRotation((Math.atan2(dy, dx) * 180) / Math.PI) }, limit)) return result;
-    }
-    return result;
-  }
-
-  const columns = Math.max(1, Math.floor((2 * usableHalfWidth) / pitch));
-  const rows = Math.max(1, Math.floor((2 * usableHalfHeight) / pitch));
+  const regularPitch = pitch * (100 / request.densityPercent);
+  const columns = Math.max(1, Math.floor((2 * usableHalfWidth) / regularPitch));
+  const rows = Math.max(1, Math.floor((2 * usableHalfHeight) / regularPitch));
   for (let row = 0; row <= rows; row += 1) {
     const y = rows === 0 ? 0 : -usableHalfHeight + (2 * usableHalfHeight * row) / rows;
     for (let column = 0; column <= columns; column += 1) {
-      const stagger = row % 2 === 1 ? pitch / 2 : 0;
+      const stagger = row % 2 === 1 ? regularPitch / 2 : 0;
       const x = -usableHalfWidth + (2 * usableHalfWidth * column) / columns + stagger;
       if (x > usableHalfWidth + EPSILON_MM) continue;
       const rotationDeg = ((row + column) % Math.max(1, request.repeatCount)) * (180 / Math.max(1, request.repeatCount));
-      if (!pushLimited(result, { x, y, rotationDeg: normalizeRotation(rotationDeg) }, limit)) return result;
+      if (!pushLimited(result, {
+        x,
+        y,
+        rotationDeg: normalizeRotation(rotationDeg),
+        materialId: chooseMaterial(request.materials, random),
+      }, limit)) return result;
     }
   }
   return result;
@@ -311,17 +447,17 @@ export function applyMotifSymmetry(
   radialRepeats: number,
 ): PatternCandidate[] {
   if (symmetry === "horizontal") {
-    return [candidate, { x: candidate.x, y: -candidate.y, rotationDeg: normalizeRotation(-candidate.rotationDeg) }];
+    return [candidate, { ...candidate, x: candidate.x, y: -candidate.y, rotationDeg: normalizeRotation(-candidate.rotationDeg) }];
   }
   if (symmetry === "vertical") {
-    return [candidate, { x: -candidate.x, y: candidate.y, rotationDeg: normalizeRotation(180 - candidate.rotationDeg) }];
+    return [candidate, { ...candidate, x: -candidate.x, y: candidate.y, rotationDeg: normalizeRotation(180 - candidate.rotationDeg) }];
   }
   if (symmetry === "four-way") {
     return [
       candidate,
-      { x: candidate.x, y: -candidate.y, rotationDeg: normalizeRotation(-candidate.rotationDeg) },
-      { x: -candidate.x, y: candidate.y, rotationDeg: normalizeRotation(180 - candidate.rotationDeg) },
-      { x: -candidate.x, y: -candidate.y, rotationDeg: normalizeRotation(180 + candidate.rotationDeg) },
+      { ...candidate, x: candidate.x, y: -candidate.y, rotationDeg: normalizeRotation(-candidate.rotationDeg) },
+      { ...candidate, x: -candidate.x, y: candidate.y, rotationDeg: normalizeRotation(180 - candidate.rotationDeg) },
+      { ...candidate, x: -candidate.x, y: -candidate.y, rotationDeg: normalizeRotation(180 + candidate.rotationDeg) },
     ];
   }
   if (symmetry === "radial") {
@@ -329,7 +465,7 @@ export function applyMotifSymmetry(
     for (let index = 0; index < radialRepeats; index += 1) {
       const degrees = (360 * index) / radialRepeats;
       const rotated = rotatePoint(candidate, degreesToRadians(degrees));
-      result.push({ x: rotated.x, y: rotated.y, rotationDeg: normalizeRotation(candidate.rotationDeg + degrees) });
+      result.push({ ...candidate, x: rotated.x, y: rotated.y, rotationDeg: normalizeRotation(candidate.rotationDeg + degrees) });
     }
     return result;
   }
@@ -387,6 +523,19 @@ class SpatialPlacementIndex {
       }
     }
   }
+
+  remove(entry: IndexedPlacement): void {
+    const [minX, maxX, minY, maxY] = this.cellRange(entry.aabb);
+    for (let x = minX; x <= maxX; x += 1) {
+      for (let y = minY; y <= maxY; y += 1) {
+        const key = `${x}:${y}`;
+        const cell = this.cells.get(key);
+        if (!cell) continue;
+        cell.delete(entry);
+        if (cell.size === 0) this.cells.delete(key);
+      }
+    }
+  }
 }
 
 function withinBounds(aabb: Aabb, request: MotifGenerationRequest): boolean {
@@ -427,8 +576,9 @@ export function generateMotif(
   const startedAt = typeof performance !== "undefined" ? performance.now() : Date.now();
   const byId = new Map(catalog.map((material) => [material.id, material]));
   const selected = request.materials.map((item) => byId.get(item.materialId)!);
-  const pitch = maxMaterialDiameter(selected) + request.minimumGapMm;
-  const baseCandidates = patternCandidates(request, pitch, limits.maxCandidates);
+  const pitch = maxMaterialDiameter(selected) + Math.max(request.targetGapMm, request.minimumGapMm);
+  const random = createSeededRandom(request.seed.trim());
+  const baseCandidates = patternCandidates(request, pitch, limits.maxCandidates, byId, random);
   if (baseCandidates.length >= limits.maxCandidates) {
     return {
       ok: false,
@@ -438,9 +588,9 @@ export function generateMotif(
     };
   }
 
-  const random = createSeededRandom(request.seed.trim());
   const index = new SpatialPlacementIndex(Math.max(1, pitch), request.minimumGapMm);
   const accepted: Placement[] = [];
+  const acceptedEntries: IndexedPlacement[] = [];
   const seenPositions = new Set<string>();
   let rejected = 0;
   let considered = 0;
@@ -448,8 +598,7 @@ export function generateMotif(
   let reachedPlacementLimit = false;
 
   for (const base of baseCandidates) {
-    if (request.densityPercent < 100 && random() * 100 >= request.densityPercent) continue;
-    const materialId = chooseMaterial(request.materials, random);
+    const materialId = base.materialId ?? chooseMaterial(request.materials, random);
     const material = byId.get(materialId)!;
     for (const transformed of applyMotifSymmetry(base, request.symmetry, request.radialRepeats)) {
       considered += 1;
@@ -477,7 +626,7 @@ export function generateMotif(
         continue;
       }
       seenPositions.add(key);
-      const placement: Placement = {
+      let placement: Placement = {
         id: `motif-${hashSeed(request.seed).toString(36)}-${placementSequence}`,
         materialId,
         xMm,
@@ -485,13 +634,82 @@ export function generateMotif(
         rotationDeg: normalizeRotation(transformed.rotationDeg),
       };
       placementSequence += 1;
-      const geometry = createPlacementGeometry(placement, material);
-      const entry = { geometry, aabb: geometryAabb(geometry) };
-      if (!withinBounds(entry.aabb, request) || collides(entry, index.query(entry.aabb), request.minimumGapMm)) {
+      const initialGeometry = createPlacementGeometry(placement, material);
+      let entry: IndexedPlacement = { geometry: initialGeometry, aabb: geometryAabb(initialGeometry) };
+      if (!withinBounds(entry.aabb, request)) {
         rejected += 1;
         continue;
       }
+      if (collides(entry, index.query(entry.aabb), request.minimumGapMm)) {
+        let relaxed = false;
+        const previousPlacement = accepted.at(-1);
+        const previousEntry = acceptedEntries.at(-1);
+        const previousMaterial = previousPlacement ? byId.get(previousPlacement.materialId) : undefined;
+        if (
+          request.symmetry === "none" && request.pattern !== "geometric" &&
+          previousPlacement && previousEntry && previousMaterial
+        ) {
+          index.remove(previousEntry);
+          const baseShift = Math.max(
+            0.1,
+            (Math.max(request.targetGapMm, request.minimumGapMm) +
+              Math.min(material.widthMm, material.heightMm, previousMaterial.widthMm, previousMaterial.heightMm)) / 4,
+          );
+          for (const factor of [0.5, 1, 1.5]) {
+            const previousAngle = degreesToRadians(previousPlacement.rotationDeg);
+            const currentAngle = degreesToRadians(placement.rotationDeg);
+            const shift = baseShift * factor;
+            const shiftedPrevious: Placement = {
+              ...previousPlacement,
+              xMm: previousPlacement.xMm - Math.cos(previousAngle) * shift,
+              yMm: previousPlacement.yMm - Math.sin(previousAngle) * shift,
+            };
+            const shiftedCurrent: Placement = {
+              ...placement,
+              xMm: placement.xMm + Math.cos(currentAngle) * shift,
+              yMm: placement.yMm + Math.sin(currentAngle) * shift,
+            };
+            const previousGeometry = createPlacementGeometry(shiftedPrevious, previousMaterial);
+            const shiftedPreviousEntry: IndexedPlacement = {
+              geometry: previousGeometry,
+              aabb: geometryAabb(previousGeometry),
+            };
+            const currentGeometry = createPlacementGeometry(shiftedCurrent, material);
+            const shiftedCurrentEntry: IndexedPlacement = {
+              geometry: currentGeometry,
+              aabb: geometryAabb(currentGeometry),
+            };
+            if (
+              !withinBounds(shiftedPreviousEntry.aabb, request) ||
+              !withinBounds(shiftedCurrentEntry.aabb, request) ||
+              collides(shiftedPreviousEntry, index.query(shiftedPreviousEntry.aabb), request.minimumGapMm)
+            ) continue;
+            index.insert(shiftedPreviousEntry);
+            const currentCollides = collides(
+              shiftedCurrentEntry,
+              index.query(shiftedCurrentEntry.aabb),
+              request.minimumGapMm,
+            );
+            if (currentCollides) {
+              index.remove(shiftedPreviousEntry);
+              continue;
+            }
+            accepted[accepted.length - 1] = shiftedPrevious;
+            acceptedEntries[acceptedEntries.length - 1] = shiftedPreviousEntry;
+            placement = shiftedCurrent;
+            entry = shiftedCurrentEntry;
+            relaxed = true;
+            break;
+          }
+          if (!relaxed) index.insert(previousEntry);
+        }
+        if (!relaxed) {
+          rejected += 1;
+          continue;
+        }
+      }
       accepted.push(placement);
+      acceptedEntries.push(entry);
       index.insert(entry);
       if (accepted.length >= limits.maxPlacements) {
         reachedPlacementLimit = true;
@@ -524,6 +742,7 @@ export function generateMotif(
     actualWidthMm: bounds ? bounds.maxX - bounds.minX : 0,
     actualHeightMm: bounds ? bounds.maxY - bounds.minY : 0,
     symmetry: request.symmetry,
+    targetGapMm: request.targetGapMm,
     minimumGapMm: request.minimumGapMm,
     acceptedCandidates: accepted.length,
     rejectedCandidates: rejected,
