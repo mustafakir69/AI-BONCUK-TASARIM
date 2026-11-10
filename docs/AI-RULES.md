@@ -168,3 +168,63 @@ Aşama 6 motoru bir LLM değildir ve ağ çağrısı yapmaz. `frontend/src/domai
 - Üretimden geçen her sonuç yine ortak çakışma ve minimum aralık çekirdeğiyle bütünüyle doğrulanır; geometrik olarak mümkün olmayan aday kabul edilmez.
 - Aynı seed ve parametreler aynı malzeme/konum/açı dizisini üretmeye devam eder.
 
+## 15. Aşama 7A AI istek ve plan sözleşmesi
+
+Aşama 7A gerçek AI modeli bağlamaz. Arayüz bir `AiDesignRequest 1.0` hazırlar ve yalnız yerel doğrulama yapar. Sağlayıcı yapılandırılmadığında doğru durum “AI bağlantısı henüz yapılandırılmadı”dır; sahte sonuç, ilerleme yüzdesi veya analiz iddiası gösterilmez.
+
+### Malzeme yetkisi
+
+- `user-only`: izinli küme kullanıcının işaretlediği etkin kimliklerdir; çıktı bu kümenin dışına çıkamaz.
+- `ai-selects`: kullanıcı bu modu seçerek etkin kataloğun tamamını aday küme olarak yetkilendirir; zorunlu kimlik yoktur.
+- `collaborative`: işaretlenen etkin kimlikler zorunludur; etkin kataloğun kalanı tamamlayıcı adaydır.
+- Her modda katalog dışı, devre dışı veya planın kendi `materialIds` kümesi dışında kalan placement reddedilir.
+
+### Sürümlü plan
+
+`AiDesignPlan 1.0`; açıklama, hedef ölçü, malzeme kimlikleri, bileşen türü/konumu/boyutu/açısı, katman/öncelik, yoğunluk bölgeleri, simetri, yerleşim üretim talimatları, uyarı ve belirsizlikleri taşır. Bilinmeyen sürüm, yinelenen kimlik, hedef dışı koordinat, `[0, 360)` dışı açı, kontrolsüz dizi veya kullanıcı adet sınırını aşan talimat bütünüyle reddedilir.
+
+Plan doğrulaması placement doğrulamasının yerine geçmez. Gelecekteki yorumlayıcının ürettiği her placement:
+
+1. benzersiz kimlik ve sonlu mm koordinatı,
+2. kullanıcı/plan tarafından izinli etkin katalog malzemesi,
+3. gerçek katalog ölçüsüyle hedef motif sınırı,
+4. kullanıcı maksimum boncuk sayısı,
+5. mevcut döndürülmüş geometri, pul dış disk ve minimum güvenlik aralığı
+
+kapılarından geçer. Tek zorunlu hata önerinin projeye alınmasını engeller.
+
+### Referans görsel
+
+JPEG, PNG ve WebP dosyaları MIME ile dosya imzası uyumu, 8 MB, 8.192 px tek kenar ve 32 MP toplam limitleriyle yerel doğrulanır. Önizleme analizin yapıldığı anlamına gelmez. Dosya proje JSON'una veya kalıcı tarayıcı kaydına yazılmaz, kullanıcıdan habersiz ağ isteğine eklenmez ve pencere kapanınca nesne URL'si geri alınır.
+
+## 16. Aşama 7B gerçek sağlayıcı ve güvenli sunucu
+
+- Sağlayıcı OpenAI Responses API'dir; Assistants API kullanılmaz. Model adı `AI_MODEL` ortam değişkeninden gelir.
+- Python SDK `responses.parse(..., text_format=AiDesignPlan)` ile Pydantic Structured Outputs ister; yanıt yine uygulama kurallarıyla bağımsız doğrulanır.
+- `OPENAI_API_KEY` yalnız backend ortamındadır. Frontend yalnız `VITE_AI_API_BASE_URL` taşır.
+- Ücretli çağrılar varsayılan olarak `AI_CALLS_ENABLED=false` ile kapalıdır. Anahtar/model/etkinleştirme yoksa backend çalışır, AI uç noktası açıklayıcı hata döndürür.
+- Sağlayıcı isteği `store=False` kullanır. Metin ve görsel uygulama tarafından veritabanına, LocalStorage'a veya proje JSON'una yazılmaz; uygulama loglarında ham içerik tutulmaz.
+- Harici çağrıdan önce şu açık onay zorunludur: “Yazdığınız tasarım tarifi ve seçtiğiniz referans görsel, tasarımın oluşturulması amacıyla seçtiğiniz yapay zekâ sağlayıcısına gönderilecektir.”
+- Backend uzak görsel URL'si kabul etmez. Dosyayı imza/decode/boyut/piksel açısından yeniden doğrular, EXIF yönünü uygular, üst veriyi kaldırıp güvenli JPEG olarak yeniden kodlar.
+- Görseldeki yazı veya talimat güvenilmeyen kullanıcı içeriğidir; sistem talimatı veya katalog yetkisi sayılmaz. Fiziksel ölçek yalnız kullanıcının `target` mm değeridir.
+- Fiyat kod içine yazılmaz. Yalnız sağlayıcının gerçek token kullanımı varsa raporlanır; tahmini ücret gösterilmez.
+- Frontend iptal, geç yanıt ve yinelenen gönderim koruması uygular. Backend sınırlı SDK yeniden denemesi, zaman aşımı, çıktı tokenı, oran ve eşzamanlılık limitleri uygular.
+
+### Plan–geometri dönüşümü
+
+Doğrudan düzenlenebilir koordinata dönüştürülen bileşenler: düz çizgi, polyline, kübik Bézier, elips kenarı, dikdörtgen kenarı/dolgusu ve açık nokta kümesi. Her sonuç bağımsız `Placement` nesnesidir; boyut katalog malzemesinden okunur.
+
+`unsupported` işaretli özgün biçim, görsel maske/kontur, topolojik katman veya açık parametrik karşılığı olmayan semantik yaprak/çiçek sessizce başka motife çevrilmez. Sınır kutusu dolgusu gibi bir yaklaştırma yapılırsa raporda açıklanır ve kullanıcı ayrıca kabul eder. Her aday son olarak motif sınırı, katalog, çakışma ve minimum aralık kapısından geçer.
+
+## 17. Aşama 7B.1 9Router sağlayıcı kuralları
+
+- OpenAI ve 9Router ortak `DesignProvider` sözleşmesini uygular; birinin hatası diğerine otomatik veya sessiz geçiş başlatmaz.
+- 9Router'a yalnız backend bağlanır. Kök adres tam olarak `http://127.0.0.1:20128/v1` olmalı ve yönlendirmeler izlenmemelidir.
+- Model kimliği `/v1/models` listesinden tam olarak alınır. Kod model adı tahmin etmez, liste dışı modeli çağırmaz ve `NINEROUTER_MODEL` boşken hazır durumu göstermez.
+- Ulaşılabilirlik ve model listesini okumak üretim yeteneğini kanıtlamaz. `NINEROUTER_MODEL_COMPATIBILITY_VERIFIED` açık değilse durum “uyumluluk doğrulanmadı”dır ve üretim çağrısı yapılmaz.
+- Resmî olarak belgelenen OpenAI uyumlu yol `/v1/chat/completions` olduğundan 9Router adapter'ı bunu kullanır. Responses API veya native `json_schema` desteği bütün modeller için varsayılmaz.
+- Varsayılan yapılandırmada yanıt düz metin JSON olarak ayrıştırılır ve `AiDesignPlan` Pydantic modeliyle doğrulanır. Bozuk JSON, eksik/fazla alan veya iş kuralı ihlali bütünüyle reddedilir.
+- Görsel desteği yalnız `/v1/models` girdisi `capabilities.vision=true` bildiriyor ve operatör ayrı canlı testten sonra `NINEROUTER_VISION_VERIFIED=true` ayarlıyorsa etkinleşir. Aksi durumda frontend dosya seçimini, backend dosya aktarımını reddeder.
+- 9Router modeli yerel süreçten uzak veya ücretli bir hesaba yönlendirebilir. Uygulama yalnız tam model kimliğini gönderir; 9Router içindeki combo/fallback/hesap politikası kullanıcı tarafından ayrıca denetlenmelidir.
+- `NINEROUTER_API_KEY` yalnız backend `.env` dosyasındadır; frontend'e, loga, hata mesajına veya dokümantasyon örneğine gerçek değer yazılmaz.
+

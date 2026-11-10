@@ -43,6 +43,7 @@ interface InspectorPanelProps {
   onUngroupSelected(): boolean;
   onAlignSelected(operation: AlignmentOperation): boolean;
   onKeyboardStepsChange(normalMm: number, shiftedMm: number): boolean;
+  onOpenAiDesigner(): void;
   onOpenMotifGenerator(): void;
 }
 
@@ -320,9 +321,15 @@ export function InspectorPanel(props: InspectorPanelProps) {
         </div>
         <MotifSettings {...props} />
         <MinimumGapForm key={props.minimumGapMm} minimumGapMm={props.minimumGapMm} onChange={props.onMinimumGapChange} />
-        <div className="motif-generator-launch">
-          <div><strong>Akıllı motif motoru</strong><span>Seçili gerçek malzemelerle deterministik motif üretin.</span></div>
-          <button className="primary-button" onClick={props.onOpenMotifGenerator} type="button">Motif oluştur</button>
+        <div className="ai-designer-launch">
+          <span className="ai-designer-launch__badge">Ana tasarım yöntemi</span>
+          <div><strong>Yapay Zekâ ile Tasarla</strong><span>Serbest metin ve referans görselle güvenli bir tasarım isteği hazırlayın.</span></div>
+          <button className="primary-button" onClick={props.onOpenAiDesigner} type="button">Yapay Zekâ ile Tasarla</button>
+          <small>AI bağlantısı henüz yapılandırılmadı.</small>
+        </div>
+        <div className="motif-generator-launch motif-generator-launch--secondary">
+          <div><strong>Geometrik araçlar</strong><span>Çizgi, halka, spiral, dalga, çiçek ve tekrarlı desenleri deterministik üretin.</span></div>
+          <button className="secondary-button secondary-button--full" onClick={props.onOpenMotifGenerator} type="button">Motif oluştur</button>
         </div>
       </section>
 

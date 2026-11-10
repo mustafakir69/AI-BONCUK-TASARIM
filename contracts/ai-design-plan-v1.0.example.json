@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "1.0",
+  "description": "Merkezden geçen düzenlenebilir dal çizgisi",
+  "target": { "widthMm": 200, "heightMm": 250 },
+  "materialIds": ["mat-seed-bead"],
+  "components": [
+    {
+      "id": "main-branch",
+      "kind": "path",
+      "label": "Ana dal",
+      "centerXmm": 0,
+      "centerYmm": 0,
+      "widthMm": 120,
+      "heightMm": 40,
+      "rotationDeg": 0,
+      "layer": 0,
+      "priority": 100,
+      "geometry": {
+        "type": "bezier",
+        "points": [
+          { "xMm": -60, "yMm": 10 },
+          { "xMm": -20, "yMm": -20 },
+          { "xMm": 20, "yMm": 20 },
+          { "xMm": 60, "yMm": -10 }
+        ],
+        "closed": false,
+        "interpretationNote": "Serbest dal eğrisi kübik Bézier ile temsil edildi."
+      },
+      "placement": {
+        "strategy": "follow-path",
+        "materialIds": ["mat-seed-bead"],
+        "targetGapMm": 1,
+        "densityPercent": 70,
+        "maxPlacements": 40
+      }
+    }
+  ],
+  "densityRegions": [],
+  "symmetry": { "type": "none", "repeatCount": null },
+  "placementInstructions": ["Boncukları dal teğetine göre döndür."],
+  "warnings": [],
+  "uncertainties": ["Referans görsel varsa özgün kontur yaklaşık yorumlanır."]
+}

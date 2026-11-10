@@ -315,7 +315,104 @@ Bu dosya, mimariyi etkileyen kararları kısa ADR (Architecture Decision Record)
 - **Gerekçe:** Sonsuz düzlemde temel gezinme birincil işaretçiyle erişilebilir olmalı; alan seçimi açık bir değiştiriciyle çakışmadan ayrılmalıdır.
 - **Sonuç:** Jest kararı saf bir yardımcıda test edilir. Boncuk düğümleri olayı durdurduğu için seçme/taşıma pan başlatmaz. Pan ve imleç merkezli zoom yalnız geçici görünüm dönüşümünü değiştirir.
 
+## D-040 — AI sağlayıcısının port arkasında ve Aşama 7A'da yapılandırılmamış kalması
+
+- **Tarih:** 2026-11-09
+- **Durum:** Kabul
+- **Karar:** Frontend yalnız `AiDesignProvider` ve `AiPlanPlacementGenerator` arayüzlerini tanımlar; gerçek sağlayıcı, HTTP istemcisi, backend veya API anahtarı eklemez.
+- **Gerekçe:** Sağlayıcı, veri politikası, maliyet ve sunucu güvenliği kararlaştırılmadan istemciye gizli anahtar veya ücretli çağrı eklemek güvenli değildir.
+- **Sonuç:** Arayüz isteği yerel doğrular ve bağlantının yapılandırılmadığını açıkça bildirir. Gerçek entegrasyon Aşama 7B için yeni kullanıcı onayı gerektirir.
+
+## D-041 — AI planı ve placement önerisi için iki zorunlu doğrulama kapısı
+
+- **Tarih:** 2026-11-09
+- **Durum:** Kabul
+- **Karar:** Sağlayıcı yanıtı önce sürümlü `AiDesignPlan 1.0` şemasına; yorumlayıcının sonucu sonra katalog, adet, motif sınırı ve mevcut kesin geometri kurallarına göre doğrulanacak.
+- **Gerekçe:** Şeması geçerli bir plan yine de çakışan, sınır dışı veya izinsiz malzemeli placement üretebilir; sağlayıcı çıktısı hiçbir aşamada otoriter değildir.
+- **Sonuç:** Bilinmeyen malzeme/koordinat/açı/boyut/limit planı reddeder. Placement dizisindeki tek zorunlu hata bütün önerinin projeye uygulanmasını engeller. Kabul ileride mevcut tek komutlu atomik editör hattından yapılacaktır.
+
+## D-042 — Referans görselin geçici yerel girdi olması
+
+- **Tarih:** 2026-11-09
+- **Durum:** Kabul
+- **Karar:** Aşama 7A referans görseli yalnız bileşen belleğinde tutacak; JPEG/PNG/WebP MIME ve imzası, 8 MB, 8.192 px ve 32 MP sınırlarıyla doğrulayacak.
+- **Gerekçe:** Sağlayıcı ve açık aktarım izni yokken görseli saklamak ya da göndermek gereksiz gizlilik ve güvenlik riski yaratır.
+- **Sonuç:** Önizleme analiz iddiası taşımaz. Dosya LocalStorage veya proje JSON'una girmez; kaldırma/kapatmada nesne URL'si geri alınır. Harici aktarım Aşama 7B'de açık kullanıcı onayına bağlıdır.
+
+## D-043 — OpenAI Responses API ve FastAPI sunucu sınırı
+
+- **Tarih:** 2026-11-09
+- **Durum:** Kabul
+- **Karar:** Gerçek sağlayıcı OpenAI Responses API olacak; model ortamdan seçilecek. Pydantic Structured Outputs isteyen uyarlayıcı Python/FastAPI backend içinde kalacak.
+- **Gerekçe:** Gizli anahtarın tarayıcıya çıkmaması ve sağlayıcı yanıtının sürümlü sözleşmeyle doğrulanması gerekir.
+- **Sonuç:** Assistants API kullanılmaz. Backend anahtarsız başlar; ücretli AI uç noktası etkinleştirme/anahtar/model eksikliğini dürüstçe bildirir.
+
+## D-044 — Açık aktarım onayı ve stateless sağlayıcı isteği
+
+- **Tarih:** 2026-11-09
+- **Durum:** Kabul
+- **Karar:** Metin/görsel aktarımı tam onay metnine bağlı olacak; sağlayıcı çağrısı `store=False` kullanacak ve ham içerik uygulamada kalıcı tutulmayacak.
+- **Gerekçe:** Referans görsel ve tasarım tarifi kullanıcı verisidir; görev dışı saklama en aza indirilmelidir.
+- **Sonuç:** Onaysız istek frontend ve backend tarafından reddedilir. Sağlayıcı kullanım politikası ayrıca geçerlidir; uygulama içinde sıfır saklama vaadi verilmez.
+
+## D-045 — 1.0 planına geriye uyumlu parametrik geometri eklenmesi
+
+- **Tarih:** 2026-11-09
+- **Durum:** Kabul
+- **Karar:** `AiDesignPlan 1.0` bileşenine isteğe bağlı `geometry` alanı eklenecek; eski 1.0 planları kabul edilmeye devam edecek. Yeni backend planı alanı zorunlu ve katı üretir.
+- **Gerekçe:** Semantik `path/region` etiketi tek başına düzenlenebilir koordinat üretmek için yeterli değildir.
+- **Sonuç:** Line/polyline/Bézier/elips/dikdörtgen/nokta kümesi dönüştürülür; `unsupported` biçimler sessizce yaklaşık sayılmaz.
+
+## D-046 — Ücretli çağrı ve kaynak limitlerinin varsayılan kapalı olması
+
+- **Tarih:** 2026-11-09
+- **Durum:** Kabul
+- **Karar:** Ücretli çağrı `AI_CALLS_ENABLED=false` varsayımıyla başlayacak; model, zaman aşımı, çıktı tokenı, en fazla iki yeniden deneme, oran ve eşzamanlılık ortamdan sınırlanacak.
+- **Gerekçe:** Yanlış yapılandırmanın kontrolsüz maliyet veya kaynak tüketimi üretmemesi gerekir.
+- **Sonuç:** Fiyatlar kodda tutulmaz; gerçek kullanım alanları varsa token raporu gösterilir. Gerçek entegrasyon testi ayrıca açık opt-in ister.
+
+## D-047 — Yüklenen görselin sunucuda yeniden çözülmesi
+
+- **Tarih:** 2026-11-09
+- **Durum:** Kabul
+- **Karar:** Frontend kontrolüne güvenilmeyecek; backend dosyayı Pillow ile yeniden çözecek, boyut/format/üst veri eşleşmesini denetleyip küçültülmüş, üst verisiz JPEG olarak sağlayıcıya iletecek.
+- **Gerekçe:** MIME etiketi tek başına güvenlik ve bellek sınırı sağlamaz; uzak URL kabulü SSRF yüzeyi açar.
+- **Sonuç:** Yalnız dosya yüklemesi vardır. 8 MB, 8.192 px ve 32 MP sınırı backend'de zorunludur.
+
+## D-048 — 9Router'ın ayrı ve yerel sağlayıcı adapter'ı olması
+
+- **Tarih:** 2026-11-10
+- **Durum:** Kabul
+- **Karar:** OpenAI adapter'ı korunacak; 9Router yalnız `http://127.0.0.1:20128/v1` köküne bağlanan ayrı bir `DesignProvider` adapter'ı olacak. Kullanıcının seçtiği sağlayıcı açıkça backend'e iletilecek ve sağlayıcılar arasında sessiz fallback yapılmayacak.
+- **Gerekçe:** Gizli anahtarı tarayıcıdan uzak tutarken yerel ağ geçidini kullanmak, hata/maliyet davranışını kullanıcı seçimiyle sınırlandırmak ve mevcut OpenAI yolunu bozmamak gerekir.
+- **Sonuç:** 9Router adapter'ı belgelenmiş `/v1/chat/completions` yolunu kullanır. Native Structured Outputs bütün model yollarında varsayılmadığından yanıt JSON olarak ayrıştırılıp Pydantic ile doğrulanır. Tam model kimliği `/v1/models` kataloğunda bulunmalı; metin uyumluluğu ve görsel uyumluluğu ayrı açık doğrulama bayraklarıyla yönetilmelidir. Yerel URL dışına yapılandırma ve HTTP yönlendirmesi yasaktır.
+
+## D-049 — Frontend sağlık kontrolünün geliştirmede aynı-origin proxy kullanması
+
+- **Tarih:** 2026-11-10
+- **Durum:** Kabul
+- **Karar:** `HttpAiDesignProvider` geliştirmede sabit mutlak backend adresi yerine aynı-origin `/api` yolunu kullanacak; Vite proxy bunu `127.0.0.1:8000` adresine yönlendirecek. `VITE_AI_API_BASE_URL` yalnız ayrı barındırma için açık override olacak.
+- **Gerekçe:** Tarayıcıda proxy sağlık yolu çalışırken istemcinin farklı mutlak origin'e gitmesi CORS/ağ davranışını değiştiriyor ve geçerli `disabled` yanıtının yanlışlıkla erişim hatası görünmesine yol açıyordu.
+- **Sonuç:** HTTP 200 + `status=ok` + `providerState=disabled`, backend erişilebilir ve AI çağrıları kapalı olarak ayrıştırılır. Ağ/sözleşme hatası ayrı kalır; güvenli konsol kaydı, manuel durum yenileme, seçili sağlayıcıya bağlı ana mesaj ve pasif düğme gerekçesi sunulur.
+
+## D-050 — Enjekte edilen fetch bağımlılığının global bağlamını korumak
+
+- **Tarih:** 2026-11-10
+- **Durum:** Kabul
+- **Karar:** `HttpAiDesignProvider`, varsayılan veya enjekte edilmiş `fetch` fonksiyonunu constructor sırasında `globalThis` bağlamına bağlayacak.
+- **Gerekçe:** Yerleşik `Window.fetch`, sınıf alanından `this.fetcher(...)` olarak çağrıldığında alıcı nesnesi `Window` yerine sağlayıcı örneği olur ve bazı gerçek tarayıcılarda Web IDL `Illegal invocation` hatası üretir.
+- **Sonuç:** Gerçek tarayıcı çağrısı doğru bağlamda çalışır; Vitest mock'ları ve bağımlılık enjeksiyonu aynı port üzerinden korunur. Sağlık hataları gizlenmez, normal HTTP/sözleşme akışında ayrıştırılır.
+
+## D-051 — Sağlık kontrolünün effect kimliğinden ayrılmış tek-uçuş yaşam döngüsü
+
+- **Tarih:** 2026-11-10
+- **Durum:** Kabul
+- **Karar:** Sağlık kontrolü yalnız dialog açılışında ve açık kullanıcı yenilemesinde başlatılacak; callback prop kimlikleri effect bağımlılığı olmayacak. Aynı anda tek istek, sıra kimliği, iptal sinyali ve 10 saniyelik zaman aşımı kullanılacak.
+- **Gerekçe:** `App` tarafından her render'da oluşturulan `onPreview` callback'i sağlık effect'ini yeniden kuruyor; cleanup içindeki `onPreview([])` parent state'ini değiştirerek özellikle React StrictMode altında sonsuz `/api/health` döngüsü oluşturuyordu.
+- **Sonuç:** Önizleme callback'i kararlı hale getirildi ve dialog içinde ref ile takip edildi. Sağlık başlangıcının mikro-göreve ertelenmesi StrictMode deneme mount'unda ağ isteğini önler. Kapanan/eskimiş sağlık yanıtı state'i değiştiremez; otomatik retry/polling yapılmaz ve loading başarı, hata veya zaman aşımında sonlanır.
+
 ## Açık kararlar
 
-- Gerçek harici AI sağlayıcısı istenirse sağlayıcı, yapılandırılmış çıktı, gizlilik, maliyet ve backend yöntemi ayrıca kararlaştırılacaktır.
+- Canlı modelle estetik kalite eşiği ve uzman kullanıcı değerlendirmesi gerçek ücretli test izni sonrasında ölçülecektir.
+- Üretim dağıtımında kimlik doğrulama, kullanıcı kotası, HTTPS, merkezi denetim kaydı ve dağıtık oran sınırı Aşama 8 kapsamındadır.
 

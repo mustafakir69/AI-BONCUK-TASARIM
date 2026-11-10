@@ -52,6 +52,7 @@ Arayüz profesyonel iş akışlarını desteklerken Türkçe, sade ve öğrenile
 - Sürümlü JSON proje kaydetme/açma
 - PNG/JPEG görsel dışa aktarma ve CSV malzeme raporu
 - Seçili gerçek malzemelerle seed tabanlı geometrik motif üretimi, geçici önizleme ve atomik uygulama
+- Serbest metin ve yerel referans görselle AI tasarım isteği hazırlama; katalog yetkisi ve güvenli şema doğrulaması
 
 ### İleri kapsam
 
@@ -80,17 +81,18 @@ Arayüz profesyonel iş akışlarını desteklerken Türkçe, sade ve öğrenile
 6. Geçerli işlem kaydedilir ve sayım güncellenir; geçersiz işlem reddedilir.
 7. Kullanıcı projeyi JSON olarak kaydeder veya JPEG önizlemesi alır.
 
-### Yapay zekâ ile tasarım (ileri aşama)
+### Yapay zekâ ile tasarım
 
 1. Kullanıcı alanı ve izinli malzemeleri seçip komut yazar.
-2. Yapay zekâ yalnızca yapılandırılmış bir yerleşim taslağı önerir.
-3. Deterministik doğrulayıcı tüm nesneleri sınar.
-4. Yalnızca tüm zorunlu kuralları geçen tasarım editöre alınır.
-5. Adetler kabul edilmiş nesnelerden hesaplanır.
+2. Aşama 7B arayüzü isteği yerel olarak doğrular ve tam aktarım onayı ister.
+3. FastAPI backend katalog yetkisini yeniden doğrular; etkinleştirme, anahtar ve model yapılandırması varsa OpenAI Responses API'den sürümlü yapılandırılmış plan ister.
+4. Plan frontend sözleşmesinden ve deterministik geometri yorumlayıcısından geçer; desteklenmeyen/yaklaştırılan bileşenler açıkça raporlanır.
+5. Geçici önizleme projeyi değiştirmez. Yalnız tüm zorunlu kuralları geçen placement dizisi kullanıcı onayıyla tek atomik komutta editöre alınır.
+6. Adetler kabul edilmiş gerçek placement nesnelerinden hesaplanır.
 
-### Referans görsel (araştırma aşaması)
+### Referans görsel
 
-Kullanıcı JPEG/PNG yükler, motifin genel biçimi çıkarılır ve seçili katalog malzemeleriyle yaklaşık bir yerleşim önerilir. Sonuç, kalite uyarısı ile düzenlenebilir nesnelere çevrilir.
+Aşama 7B'de kullanıcı JPEG/PNG/WebP yükler; dosya önce yerel, açık onaydan sonra backend tarafında yeniden doğrulanır. Güvenli yeniden kodlanan görsel gerçek görme yetenekli modele gönderilebilir. Model yalnız yapısal plan önerir; fiziksel ölçek kullanıcı hedefinden gelir ve referansın birebir/kusursuz dönüşümü garanti edilmez.
 
 ## 7. İşlevsel gereksinimler
 
@@ -112,8 +114,13 @@ Kullanıcı JPEG/PNG yükler, motifin genel biçimi çıkarılır ve seçili kat
 | FR-09B | Gruplar proje JSON'unda saklanmalı ve toplu işlemler tek undo/redo adımı olmalı | Zorunlu |
 | FR-09C | Geometrik motif motoru yalnız seçili katalog malzemeleriyle deterministik placement nesneleri üretmeli | Zorunlu |
 | FR-09D | Motif önizlemesi projeyi değiştirmemeli; uygulama yeniden doğrulanmalı ve tek undo/redo adımı olmalı | Zorunlu |
-| FR-10 | Yapay zekâ yalnızca seçilen malzemelerle yapısal öneri vermeli | İleri |
-| FR-11 | JPEG/PNG referans yaklaşık motife dönüştürülebilmeli | Araştırma |
+| FR-10 | AI isteği üç açık malzeme yetki modundan birini kullanmalı; katalog dışı kayıt yasak olmalı | Zorunlu |
+| FR-10A | Yapılandırılmış AI planı sürüm, katalog, koordinat, açı, boyut ve çıktı sınırlarıyla doğrulanmalı | Zorunlu |
+| FR-10B | Sağlayıcı ve plan-yerleşim üreticisi geometri/editör katmanından bağımsız portlar olmalı | Zorunlu |
+| FR-11 | JPEG/PNG/WebP referans tür, imza, boyut ve çözünürlük açısından yerel doğrulanmalı | Zorunlu |
+| FR-11A | Referansın harici analizi yalnız açık onaylı Aşama 7B sunucu akışında yapılmalı | Zorunlu |
+| FR-11B | Gizli anahtar yalnız backend'de kalmalı; ücretli çağrı ayrıca etkinleştirilmeden çalışmamalı | Zorunlu |
+| FR-11C | AI planı yalnız desteklenen parametrik geometriler için placement'a çevrilmeli; desteklenmeyen biçimler açıkça raporlanmalı | Zorunlu |
 
 ## 8. İşlevsel olmayan gereksinimler
 
@@ -124,7 +131,7 @@ Kullanıcı JPEG/PNG yükler, motifin genel biçimi çıkarılır ve seçili kat
 - **Erişilebilirlik:** Araçların metin etiketi, klavye odağı ve yalnız renge dayanmayan durum bildirimi olmalıdır.
 - **Yerelleştirme:** İlk dil Türkçedir; kullanıcı metinleri bileşen mantığına gömülmeyecek biçimde merkezileştirilebilir.
 - **Güvenilirlik:** Proje içe aktarımı şema ve iş kuralı doğrulamasından geçmeden duruma alınmaz.
-- **Gizlilik:** Manuel ilk sürüm yerel tarayıcıda çalışır; görsel/veri sunucuya gönderilmez.
+- **Gizlilik:** Manuel editör yerel tarayıcıda çalışır. AI metni/görseli yalnız açık onayla güvenli backend üzerinden sağlayıcıya gönderilir; proje verisi otomatik buluta kaydedilmez.
 
 ## 9. Aşama 0 kabul ölçütleri
 

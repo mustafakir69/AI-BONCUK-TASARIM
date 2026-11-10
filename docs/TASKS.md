@@ -4,7 +4,7 @@ Durum işaretleri: `[ ]` yapılacak, `[~]` devam ediyor, `[x]` tamamlandı, `[!]
 
 ## Mevcut aşama
 
-**Aşama 6.1 — Serbest gezinme ve düzenli eğri yerleşimi revizyonu: tamamlandı (2026-11-09).**
+**Aşama 7B.4 — kontrollü sağlık isteği yaşam döngüsü: tamamlandı (2026-11-10). Aşama 7C için kullanıcı onayı bekleniyor.**
 
 ### Tamamlanan işler
 
@@ -336,13 +336,187 @@ Kullanıcı onayı 2026-11-09 tarihinde alındı.
 - [x] `npm run build` — Vite üretim çıktısı başarılı
 - [!] Tarayıcı üzerinde manuel etkileşim/görsel QA bu çalışma oturumunda yapılmadı; jest kararları, koordinat dönüşümleri, bileşen testleri ve üretim derlemesiyle doğrulandı
 
+## Aşama 7A — Tamamlanan işler
+
+- [x] P7A.1 Serbest metinli “Yapay Zekâ ile Tasarla” ana arayüzünü eklemek
+- [x] P7A.2 Geometrik motif üreticisini ayrı “Geometrik araçlar” bölümünde korumak
+- [x] P7A.3 JPEG/PNG/WebP tür, dosya imzası, 8 MB, 8.192 px ve 32 MP doğrulamasını uygulamak
+- [x] P7A.4 Yerel referans önizleme, değiştirme ve kaldırma yaşam döngüsünü eklemek
+- [x] P7A.5 Kullanıcı seçimi, AI seçimi ve birlikte seçim malzeme yetki modlarını uygulamak
+- [x] P7A.6 Hedef mm ölçüsü, güvenlik/hedef aralığı, yoğunluk, simetri ve maksimum adet alanlarını eklemek
+- [x] P7A.7 Sağlayıcıdan bağımsız `AiDesignProvider` ve `AiPlanPlacementGenerator` portlarını tanımlamak
+- [x] P7A.8 Sürümlü `AiDesignRequest` ve `AiDesignPlan` şemalarını katı doğrulamak
+- [x] P7A.9 Bilinmeyen/izin verilmeyen katalog kimliği, koordinat, açı, boyut ve çıktı limitlerini reddetmek
+- [x] P7A.10 AI placement önerisini motif sınırı, katalog, adet, çakışma ve minimum aralık kapısından geçirmek
+- [x] P7A.11 Sağlayıcı yokken doğru bağlantı durumunu göstermek; sahte üretim/ilerleme sunmamak
+- [x] P7A.12 AI taslak durumunu proje/geçmiş dışında tutarak mevcut editörü ve JSON `1.1` uyumluluğunu korumak
+- [x] P7A.13 Alan, altyapı, bileşen ve uygulama entegrasyon testlerini eklemek
+
+### Aşama 7A kabul ölçütleri
+
+- [x] Kullanıcı kategori seçmeden serbest tasarım tarifi yazabilir
+- [x] Referans görsel yerel olarak doğrulanır, önizlenir ve kaldırılır; editör değişmez
+- [x] Üç malzeme modu yalnız etkin katalog kayıtlarından izin kümesi üretir
+- [x] AI çıktısı sürüm ve şema doğrulamasını geçmeden plan sayılmaz
+- [x] Plan veya placement içindeki katalog dışı malzeme bütünüyle reddedilir
+- [x] Placement önerisi mevcut kesin geometri çekirdeğini ve motif sınırını atlayamaz
+- [x] Gerçek sağlayıcı, API anahtarı, harici aktarım veya sahte AI sonucu eklenmemiştir
+- [x] Geometrik araçlar ve mevcut proje JSON akışı korunmuştur
+
+### Aşama 7A doğrulama sonucu
+
+- [x] `npm run typecheck`
+- [x] `npm run lint`
+- [x] `npm test` — 20 dosya, 181 test
+- [x] `npm run build` — Vite üretim çıktısı başarılı
+- [!] Tarayıcı üzerinde manuel görsel QA bu çalışma oturumunda yapılmadı; responsive arayüz bileşen ve uygulama testleriyle doğrulandı
+
+### Bilinen sınırlamalar
+
+- Gerçek AI sağlayıcısı ve güvenli sunucu çağrısı Aşama 7A kapsamında yoktur.
+- Referans görsel yalnız geçici yerel girdidir; analiz edilmez ve projeye kaydedilmez.
+- Planı placement nesnelerine dönüştüren sağlayıcı bağımsız yorumlayıcı portu tanımlıdır, gerçek üretim uygulaması Aşama 7B kararına bağlıdır.
+- Sağlayıcı, veri bölgesi, saklama politikası, maliyet/limit ve kullanıcı aktarım onayı henüz seçilmemiştir.
+
+## Aşama 7B — Tamamlanan işler
+
+- [x] P7B.1 Python/FastAPI backend, katı Pydantic istek/plan sözleşmesi ve `/api/health` uç noktasını kurmak
+- [x] P7B.2 Modeli ortamdan seçen OpenAI Responses API + Structured Outputs uyarlayıcısını eklemek
+- [x] P7B.3 `OPENAI_API_KEY` değerini yalnız backend ortamında tutmak; anahtarsız başlatma ve dürüst `503` davranışı sağlamak
+- [x] P7B.4 Ücretli çağrıları varsayılan kapalı `AI_CALLS_ENABLED` ayarına bağlamak
+- [x] P7B.5 Açık veri aktarım onayı olmadan sağlayıcı çağrısını hem frontend hem backend tarafında engellemek
+- [x] P7B.6 JPEG/PNG/WebP yüklemesini sunucuda bağımsız çözümlemek; tür, boyut, kenar, piksel ve üst veri eşleşmesini doğrulamak
+- [x] P7B.7 Kullanıcı seçimi, AI seçimi ve birlikte seçim katalog yetkisini sunucuda yeniden doğrulamak
+- [x] P7B.8 Plan–istek hedefi, koordinat, bileşen sayısı, malzeme ve maksimum placement sınırlarını doğrulamak
+- [x] P7B.9 Çizgi, polyline, kübik Bézier, elips/dikdörtgen ve nokta kümesi yorumlayıcısını eklemek
+- [x] P7B.10 Desteklenmeyen özgün biçimleri sessiz dönüştürmemek; yaklaştırma/uyarı raporu ve kullanıcı kabulü eklemek
+- [x] P7B.11 Geçici Konva önizlemesini gerçek placement sayımına bağlamak; açık onayla tek atomik komutta uygulamak
+- [x] P7B.12 İptal, geç yanıt, yinelenen tıklama, istemci/sunucu zaman aşımı, yeniden deneme, oran ve eşzamanlılık sınırlarını eklemek
+- [x] P7B.13 `store=False`, ham içerik loglamama, yalnız yerel dosya yüklemesi ve yapılandırılmış CORS politikasını uygulamak
+- [x] P7B.14 Frontend/backend ortak sözleşme örneği ile API, güvenlik, bileşen ve geometri testlerini eklemek
+- [x] P7B.15 PowerShell kurulumunu, `.env.example`, güvenlik notlarını ve ilgili belgeleri güncellemek
+
+### Aşama 7B doğrulama sonucu
+
+- [x] Frontend `npm run typecheck`
+- [x] Frontend `npm run lint`
+- [x] Frontend `npm test` — 23 dosya, 191 test
+- [x] Frontend `npm run build` — Vite üretim derlemesi başarılı
+- [x] Backend `ruff check app tests`
+- [x] Backend `mypy app tests`
+- [x] Backend `pytest` — 22 test başarılı, gerçek ücretli entegrasyon testi 1 adet açık opt-in olmadığı için atlandı
+- [!] Gerçek OpenAI anahtarı/ücretli çağrı ve tarayıcı üzerinde manuel görsel QA bu çalışmada bilinçli olarak yapılmadı
+
+### Bilinen sınırlar
+
+- Metin ve görselin gerçek model tarafından yorumlanacağı üretim yolu hazırdır; bu teslimde anahtar kullanılmadığı için canlı sağlayıcı yanıtı gözlenmedi.
+- Serbest/özgün konturlar yalnız açık nokta/polyline/Bézier ile ifade edildiyse placement'a dönüşür. Görsel maske, topolojik katman, birebir yaprak/çiçek silueti ve kumaş/dikiş fiziği desteklenmez.
+- Geliştirme sunucusu `127.0.0.1` içindir. Üretimde kimlik doğrulama, kullanıcı kotası, HTTPS, merkezi erişim kaydı ve dağıtık oran sınırı ayrıca zorunludur.
+
+## Aşama 7B.1 — Tamamlanan işler
+
+- [x] P7B1.1 Mevcut OpenAI Responses API adapter'ını koruyarak ortak provider kaydına almak
+- [x] P7B1.2 9Router için yalnız `127.0.0.1:20128/v1` kökünü kabul eden Chat Completions adapter'ı eklemek
+- [x] P7B1.3 `AI_PROVIDER`, `NINEROUTER_BASE_URL`, `NINEROUTER_API_KEY` ve `NINEROUTER_MODEL` yapılandırmasını eklemek
+- [x] P7B1.4 `/v1/models` ile erişilebilirliği, tam model kimliğini ve katalog vision metadatasını prompt göndermeden denetlemek
+- [x] P7B1.5 9Router yanıtını düz JSON olarak ayrıştırıp Pydantic `AiDesignPlan` sözleşmesiyle doğrulamak
+- [x] P7B1.6 Sağlayıcı seçimini frontend'e eklemek; doğrulanmamış modeli hazır veya görsel destekli göstermemek
+- [x] P7B1.7 Seçilen sağlayıcıyı açık onayla backend'e iletmek ve sessiz OpenAI/9Router fallback'ini engellemek
+- [x] P7B1.8 Yerel adres dışını ve HTTP yönlendirmesini engellemek; anahtarları backend sınırında tutmak
+- [x] P7B1.9 Offline/mocked adapter, bozuk JSON, sağlayıcı seçimi, model kataloğu ve UI durum testlerini eklemek
+- [x] P7B1.10 PowerShell kurulumu, AI kuralları, mimari, karar kaydı ve değişiklik geçmişini güncellemek
+
+### Aşama 7B.1 doğrulama sonucu
+
+- [x] İlk kontrolde yerel TCP `127.0.0.1:20128` erişilebilir ve `GET /v1/models` 200 idi; 25 model ile capability alanları salt okunur alındı
+- [!] 2026-11-10 son kontrolde yerel 9Router süreci kapalı/erişilemezdi; arayüzün “kullanılamıyor” durumu mock ve bileşen testleriyle doğrulandı
+- [x] Frontend `npm run typecheck`
+- [x] Frontend `npm run lint`
+- [x] Frontend `npm test` — 23 dosya, 193 test başarılı
+- [x] Frontend `npm run build` — Vite üretim derlemesi başarılı
+- [x] Backend `ruff check app tests`
+- [x] Backend `mypy app tests`
+- [x] Backend `pytest` — 28 test başarılı, 3 canlı entegrasyon testi açık opt-in olmadığı için atlandı
+- [!] 9Router'a prompt/model çağrısı, gerçek API anahtarı ve ücretli çağrı bilinçli olarak kullanılmadı
+- [!] Tarayıcı üzerinde manuel görsel QA yapılmadı
+
+### Aşama 7B.1 bilinen sınırlar
+
+- Yerel `/v1/models` metin üretimi veya şema uyumluluğunu tek başına kanıtlamaz; model hazır durumu ayrı canlı doğrulama bayrağı ister.
+- 9Router native `json_schema` desteği model/yol bazında değişebildiğinden varsayılan adapter JSON metnini Pydantic ile doğrular.
+- Görsel alanı katalogdaki vision metadatasına ek olarak ayrı operatör doğrulaması olmadan açılmaz.
+- 9Router'ın kendi combo/fallback ve uzak hesap politikası uygulama tarafından denetlenemez; kullanıcı bunu 9Router panelinde yapılandırmalıdır.
+
+## Aşama 7B.2 — Tamamlanan işler
+
+- [x] P7B2.1 Frontend sağlık isteğinin gerçek URL'sini ve backend sözleşmesini incelemek
+- [x] P7B2.2 Geliştirme varsayılanını sabit `127.0.0.1:8000` yerine Vite aynı-origin `/api` proxy'sine taşımak
+- [x] P7B2.3 HTTP 200 + `status=ok` + `providerState=disabled` yanıtını bağlantı hatasından ayırmak
+- [x] P7B2.4 Ağ/JSON/sözleşme hatalarını güvenli geliştirici konsolu kaydıyla raporlamak
+- [x] P7B2.5 OpenAI/9Router radyo seçimini tekil tutmak ve ana mesajı yalnız seçili sağlayıcıdan üretmek
+- [x] P7B2.6 Backend, 9Router erişimi, katalog modeli ve canlı uyumluluk durumlarını ayrı göstermek
+- [x] P7B2.7 “Durumu yenile” akışını eklemek ve yeniden bağlantıda kullanıcı seçimini korumak
+- [x] P7B2.8 Pasif oluşturma düğmesinin eksik ayar/güvenlik gerekçesini görünür yapmak
+- [x] P7B2.9 Vite proxy, sağlık sözleşmesi, kesinti/yeniden bağlantı ve sağlayıcı seçim testlerini eklemek
+- [x] P7B2.10 README, mimari, karar kaydı, görevler ve değişiklik geçmişini güncellemek
+
+### Aşama 7B.2 doğrulama sonucu
+
+- [x] Doğrudan FastAPI `http://127.0.0.1:8000/api/health` — HTTP 200
+- [x] Vite proxy `http://127.0.0.1:5173/api/health` — HTTP 200 ve aynı JSON sözleşmesi
+- [x] Frontend TypeScript ve ESLint
+- [x] Frontend otomatik testleri — 24 dosya, 197 test başarılı; Vite üretim derlemesi başarılı
+- [x] Backend Ruff ve strict mypy başarılı; pytest 28 başarılı, 3 açık opt-in canlı test atlandı
+- [!] Computer-use tarayıcı/native erişim yüzeyleri kullanılamadığı için otomatik gerçek tarayıcı etkileşimi yapılamadı; kullanıcı tarafından bildirilen gerçek tarayıcı bulgusu ve iki gerçek HTTP uç noktası doğrulandı
+- [!] Canlı AI/model isteği gönderilmedi; `AI_CALLS_ENABLED=false` değiştirilmedi
+
+## Aşama 7B.3 — Tamamlanan işler
+
+- [x] P7B3.1 Gerçek tarayıcıdaki `Window.fetch` bağlam kaybını kök neden düzeyinde düzeltmek
+- [x] P7B3.2 Varsayılan tarayıcı fetch'i, enjekte edilen fetch ve mock fetch davranışlarını ayrı regresyon testleriyle korumak
+- [x] P7B3.3 HTTP 200 sağlık yanıtında 9Router `unverified` durumunu erişim hatasından ayırmak
+- [x] P7B3.4 9Router doğrulanmamış mesajını “erişilebilir ancak model uyumluluğu henüz doğrulanmadı” olarak sabitlemek
+- [x] P7B3.5 OpenAI/9Router tekil seçim ve seçime bağlı oluşturma düğmesi politikasını doğrulamak
+- [x] P7B3.6 Canlı uyumluluk doğrulama gereksinimini güvenlik bayrağını atlamadan kullanıcıya açıklamak
+- [x] P7B3.7 Değişiklik geçmişi, karar kaydı ve görev doğrulamalarını güncellemek
+
+### Aşama 7B.3 doğrulama sonucu
+
+- [x] Vite proxy `http://127.0.0.1:5173/api/health` — HTTP 200; 9Router erişilebilir, model katalogda mevcut ve uyumluluk doğrulanmamış
+- [x] Doğrudan FastAPI `http://127.0.0.1:8000/api/health` — HTTP 200
+- [x] Hedefli frontend testleri — 2 dosya, 19 test başarılı
+- [x] Frontend TypeScript ve ESLint başarılı; tam test paketi 24 dosya, 199 test başarılı; Vite üretim derlemesi başarılı
+- [x] Backend Ruff ve strict mypy başarılı; pytest 28 başarılı, 3 açık opt-in canlı test atlandı
+- [!] Windows Computer Use native bağlantısı kullanılamadığı için bu oturumda otomatik gerçek tarayıcı tıklama testi yapılamadı; gerçek HTTP yolları ve tarayıcı bağlamını zorunlu kılan regresyon testi doğrulandı
+- [!] Canlı AI/model isteği gönderilmedi; `AI_CALLS_ENABLED` ve uyumluluk doğrulama ayarları değiştirilmedi
+
+## Aşama 7B.4 — Tamamlanan işler
+
+- [x] P7B4.1 Sonsuz sağlık döngüsünün kararsız `onPreview` prop'u ile effect cleanup parent state güncellemesinden kaynaklandığını belirlemek
+- [x] P7B4.2 `App` AI önizleme callback'ini kararlı hale getirmek ve sağlık effect'ini önizleme callback kimliğinden ayırmak
+- [x] P7B4.3 Sağlık kontrolünü açılış ve kullanıcı yenilemesiyle sınırlamak; eşzamanlı ikinci isteği engellemek
+- [x] P7B4.4 İstek sıra kimliği, `AbortController`, kapanış iptali ve eski yanıt koruması eklemek
+- [x] P7B4.5 Sağlık istemcisine 10 saniyelik zaman aşımı ve anlaşılır hata durumu eklemek
+- [x] P7B4.6 HTTP 200 sonrasında loading'i kapatmak ve OpenAI/9Router kartlarını göstermek
+- [x] P7B4.7 Yeniden render, callback kimliği değişimi, yenileme, kapanış, StrictMode'da tek açılış isteği ve sağlayıcı seçimi regresyonlarını test etmek
+- [x] P7B4.8 Mimari, karar kaydı, görevler, README ve değişiklik geçmişini güncellemek
+
+### Aşama 7B.4 doğrulama sonucu
+
+- [x] Hedefli frontend kontrolleri — TypeScript ve ESLint başarılı; 3 dosyada 46 test başarılı
+- [x] Frontend tam paket — 24 dosyada 204 test başarılı; Vite üretim derlemesi başarılı
+- [x] Backend Ruff ve strict mypy başarılı; pytest 28 başarılı, 3 açık opt-in canlı test atlandı
+- [x] Geçici yerel backend ile doğrudan FastAPI ve Vite proxy sağlık yolları ayrı ayrı HTTP 200 döndürdü; logda yalnız iki açık doğrulama GET isteği oluştu
+- [!] Windows Computer Use native bağlantısı kullanılamadığı için Network paneli bu oturumda otomatik izlenemedi; istek sayısı ve iptal yaşam döngüsü StrictMode/re-render bileşen testleriyle doğrulandı
+- [!] Canlı AI/model isteği gönderilmedi; API anahtarları ve model uyumluluk ayarları değiştirilmedi
+
 ## Onay bekleyen aşama
 
-**Aşama 7.** Kullanıcı onayı olmadan başlanmayacaktır; referans görsel analizi Aşama 6 kapsamında eklenmemiştir.
+**Aşama 7C veya Aşama 8 başlatılmadı.** Yeni kapsam için kullanıcı onayı beklenecektir.
 
 ## Gelecek aşamalar
 
-Aşama 7–8 görev kırılımı [ROADMAP.md](ROADMAP.md) dosyasında tutulur. Her aşama başlamadan önce buraya ayrıntılı aktif görev listesi taşınır.
+Sonraki onaylı aşamaların görev kırılımı [ROADMAP.md](ROADMAP.md) dosyasında tutulur. Her aşama başlamadan önce buraya ayrıntılı aktif görev listesi taşınır.
 
 ## Bilinen açık konular
 
@@ -351,4 +525,6 @@ Aşama 7–8 görev kırılımı [ROADMAP.md](ROADMAP.md) dosyasında tutulur. H
 - [x] Aşama 3'te 100 adımlı terslenebilir komut geçmişini seçmek
 - [x] Aşama 3'te 5.000 uzak nesneli aday testinde AABB ön elemesinin yeterli olduğunu doğrulamak
 - [ ] Ticari hedeflerden önce kumaş kenar payı (`edgeGapMm`) gereksinimini uzman kullanıcılarla doğrulamak
+- [x] Aşama 7B sağlayıcısı, saklama azaltımı, maliyet etkinleştirme, zaman aşımı ve oran sınırını kararlaştırmak
+- [x] Görsel/metin harici aktarımı için açık kullanıcı onayı metnini uygulamak
 

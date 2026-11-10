@@ -161,25 +161,36 @@ Görevler:
 
 **Çıkış ölçütü:** Gezinme fiziksel koordinatları değiştirmez; eğri yoğunluğu rastgele delik üretmez; son sonuç ortak çakışma ve minimum aralık kurallarını geçer.
 
-## Aşama 7 — Referans görsel analizi
+## Aşama 7A — AI tasarım arayüzü ve entegrasyon mimarisi
 
-**Amaç:** JPEG/PNG motifini, seçili gerçek malzemelerle yaklaşık ve düzenlenebilir tasarıma dönüştürmek.
+**Amaç:** Gerçek sağlayıcı çağrısı yapmadan serbest metin/görsel girdisini, katalog yetkisini ve güvenli yapılandırılmış plan sınırını hazırlamak.
 
-Görevler:
+- [x] Serbest metinli Türkçe ana tasarım arayüzü ve örnek istemler
+- [x] Yerel JPEG/PNG/WebP önizleme; tür, imza, boyut ve çözünürlük güvenliği
+- [x] Kullanıcı seçimi, AI seçimi ve birlikte seçim malzeme yetki modları
+- [x] Hedef ölçü, iki aralık, yoğunluk, simetri ve maksimum adet kısıtları
+- [x] Sağlayıcıdan bağımsız istek/plan/placement üretici arayüzleri
+- [x] Sürümlü plan şeması, katalog/koordinat/açı/boyut/limit doğrulaması
+- [x] Kesin motif sınırı, çakışma ve minimum aralık placement kapısı
+- [x] Bağlantı yok durumunun doğru sunumu ve editör/JSON uyumluluk testleri
 
-- P7.1 Temsili veri seti ve başarı ölçütü tanımı
-- P7.2 Dosya türü/boyutu/çözünürlük doğrulaması
-- P7.3 Arka plan ayırma ve motif maskesi prototipi
-- P7.4 Siluet/kenar/renk bölgesi çıkarımı deneyi
-- P7.5 Fiziksel alana ölçekleme ve yoğunluk kontrolü
-- P7.6 Seçili malzemelerle yerleşim sezgiseli
-- P7.7 Ortak geometri doğrulama/onarım hattı
-- P7.8 Kalite uyarısı ve kullanıcı ayarlama akışı
-- P7.9 Gizlilik, silme ve sağlayıcı politikası
+**Çıkış ölçütü:** Hiçbir güvenilmeyen plan veya placement doğrudan projeye yazılamaz; sağlayıcı yokken harici çağrı ve sahte sonuç oluşmaz.
 
-**Çıkış ölçütü:** Temsili örneklerde düzenlenebilir ve kurallara uygun yaklaşık yerleşim üretilir; kusursuzluk iddiası olmadan kalite/sınırlamalar kullanıcıya gösterilir.
+## Aşama 7B — Gerçek AI ve referans analiz entegrasyonu (tamamlandı)
 
-**Doğrulama:** Etiketli örnek seti, siluet benzerliği ve geçerli yerleşim oranı; uzman kullanıcı değerlendirmesi.
+**Amaç:** Onaylanan güvenli sunucu ve sağlayıcı üzerinden metin/görselden yapılandırılmış plan alıp mevcut doğrulama hattıyla düzenlenebilir önizlemeye çevirmek.
+
+Tamamlanan karar ve görevler:
+
+- [x] OpenAI Responses API, ortamdan seçilen model ve Pydantic Structured Outputs
+- [x] Açık veri aktarım onayı; `store=False`; ham metin/görseli kalıcı saklamayan akış
+- [x] FastAPI gizli anahtar sınırı, zaman aşımı, çıktı, yeniden deneme, oran ve eşzamanlılık limitleri
+- [x] Planı desteklenen parametrik geometriler için placement nesnelerine dönüştüren yerel yorumlayıcı
+- [x] Geçici önizleme, gerçek malzeme sayımı, uyarı/yaklaştırma ve kullanıcı kabul/red akışı
+- [x] Tek undo/redo adımlı atomik uygulama ve başarısızlıkta mevcut projeyi koruma
+- [ ] Canlı ücretli modelle uzman kullanıcı kalite değerlendirmesi (anahtar/ücretli çağrı bu teslimde kullanılmadı)
+
+**Çıkış ölçütü:** Yapılandırılmış sağlayıcı çıktısı hem şema hem kesin geometri kapısını geçer; kullanıcı onayı olmadan proje değişmez veya veri gönderilmez.
 
 ## Aşama 8 — Ticari sürüm
 

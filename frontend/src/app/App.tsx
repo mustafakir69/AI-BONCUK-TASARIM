@@ -13,6 +13,7 @@ import {
   type ResolvedProjectImport,
 } from "../domain/project";
 import { useDesignEditor } from "../features/editor/useDesignEditor";
+import { AiDesignDialog } from "../features/ai/AiDesignDialog";
 import { ExportDialog, type ExportRequest } from "../features/files/ExportDialog";
 import { ProjectConfirmDialog } from "../features/files/ProjectConfirmDialog";
 import { MotifGeneratorDialog, type MotifApplicationMode } from "../features/generator/MotifGeneratorDialog";
@@ -57,6 +58,7 @@ export function App() {
   const [pendingMotifReplace, setPendingMotifReplace] = useState<Placement[]>();
   const [exportOpen, setExportOpen] = useState(false);
   const [generatorOpen, setGeneratorOpen] = useState(false);
+  const [aiDesignerOpen, setAiDesignerOpen] = useState(false);
   const [motifPreview, setMotifPreview] = useState<Placement[]>([]);
   const isDirty = currentFingerprint !== savedFingerprint;
   const {
@@ -154,6 +156,7 @@ export function App() {
     }));
     setProjectNotice("Yeni proje oluşturuldu; malzeme kataloğu korundu.");
     setGeneratorOpen(false);
+    setAiDesignerOpen(false);
     setMotifPreview([]);
     setConfirmAction(null);
   }
@@ -197,6 +200,7 @@ export function App() {
       ? `Proje açıldı; ${resolved.conflictCount} malzeme kimliği yerel kaydı ezmeden yeniden eşlendi.`
       : "Proje doğrulandı ve açıldı.");
     setGeneratorOpen(false);
+    setAiDesignerOpen(false);
     setMotifPreview([]);
     setPendingImport(undefined);
     setConfirmAction(null);
@@ -263,6 +267,23 @@ export function App() {
     return applied;
   }
 
+  function closeAiDesigner(): void {
+    setAiDesignerOpen(false);
+    setMotifPreview([]);
+  }
+
+  function commitAiDesign(placements: readonly Placement[], mode: "append" | "replace"): boolean {
+    const applied = editor.applyGeneratedPlacements(placements, mode);
+    if (applied) {
+      setAiDesignerOpen(false);
+      setMotifPreview([]);
+      setProjectNotice(mode === "append"
+        ? `${placements.length} boncukluk AI önizlemesi mevcut tasarıma tek işlemde eklendi.`
+        : `${placements.length} boncukluk AI önizlemesi mevcut tasarımın yerine tek işlemde uygulandı.`);
+    }
+    return applied;
+  }
+
   function handleMotifApply(placements: readonly Placement[], mode: MotifApplicationMode): void {
     if (mode === "replace" && isDirty) {
       setPendingMotifReplace(placements.map((placement) => ({ ...placement })));
@@ -296,9 +317,9 @@ export function App() {
           onUndo={editor.undo}
         />
 
-        <div className="stage-badge" title="Deterministik akıllı motif üretim motoru">
+        <div className="stage-badge" title="AI tasarım arayüzü ve güvenli entegrasyon mimarisi">
           <span />
-          Aşama 6
+          Aşama 7B
         </div>
       </header>
 
@@ -372,6 +393,7 @@ export function App() {
           onMinimumGapChange={editor.setMinimumGap}
           onMotifChange={setMotif}
           onMotifGuideVisibleChange={setMotifGuideVisible}
+          onOpenAiDesigner={() => setAiDesignerOpen(true)}
           onOpenMotifGenerator={() => setGeneratorOpen(true)}
           onPlacementChange={editor.updatePlacement}
           onPasteClipboard={editor.pasteClipboard}
@@ -399,6 +421,16 @@ export function App() {
           motif={motif}
           onApply={handleMotifApply}
           onClose={closeMotifGenerator}
+          onPreview={handleMotifPreview}
+          projectMinimumGapMm={editor.minimumGapMm}
+        />
+      ) : null}
+      {aiDesignerOpen ? (
+        <AiDesignDialog
+          materials={materialLibrary.materials}
+          motif={motif}
+          onApply={commitAiDesign}
+          onClose={closeAiDesigner}
           onPreview={handleMotifPreview}
           projectMinimumGapMm={editor.minimumGapMm}
         />

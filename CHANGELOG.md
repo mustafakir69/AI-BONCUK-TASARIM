@@ -4,11 +4,70 @@ Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) yaklaşımın�
 
 ## [Yayımlanmadı]
 
+### Düzeltildi
+
+- Kararsız AI önizleme callback'i ile effect cleanup state güncellemesinin React StrictMode altında sonsuz `/api/health` isteği ve kalıcı “Backend kontrol ediliyor” durumu oluşturması
+- Yerleşik tarayıcı `fetch` fonksiyonunun sağlayıcı nesnesine bağlanarak çağrılması sonucu oluşan `Failed to execute 'fetch' on 'Window': Illegal invocation` hatası
+- 9Router erişilebilir ve model katalogda mevcutken doğrulanmamış uyumluluğun bağlantı hatası gibi görünmesi
+- Frontend sağlık kontrolünün Vite `/api` proxy'si yerine sabit mutlak backend adresine gitmesi ve geçerli `providerState=disabled` yanıtını “sunucuya ulaşılamadı” olarak göstermesi
+- Sağlayıcı yenilemesinde seçili olmayan kartın ana durum mesajını etkilemesi; OpenAI/9Router seçimi artık tekil ve seçime bağlı
+
+### Değiştirildi
+
+- Sağlık kontrolü açılış ve açık kullanıcı yenilemesiyle sınırlandı; tek-uçuş, sıra kimliği, kapanış iptali ve 10 saniyelik zaman aşımı eklendi
+- Varsayılan ve enjekte edilen `fetch` bağımlılıkları güvenli global bağlamla çalıştırılıyor; mock/enjeksiyon desteği korunuyor
+- Doğrulanmamış 9Router modeli için canlı metin/JSON uyumluluk testi ve doğrulama bayrağı adımları pasif düğme yanında açıkça gösteriliyor
+- HTTP 200 + `status=ok` sağlık sözleşmesi doğrulanıyor; backend, AI çağrısı, 9Router erişimi, katalog modeli ve uyumluluk durumları ayrı gösteriliyor
+- Pasif “Gerçek AI planı oluştur” düğmesi eksik ayar veya güvenlik doğrulamasını açıklıyor
+- “Durumu yenile” yeniden bağlantı kontrolü ve güvenli konsol hata kaydı eklendi
+- Frontend `.env.example` geliştirmede aynı-origin proxy kullanacak şekilde boş API köküne geçirildi
+- Frontend TypeScript/ESLint, 24 dosyada 197 test ve Vite üretim derlemesi; backend Ruff/strict mypy ve 28 pytest ile doğrulandı
+- Aşama 7B.3 fetch bağlamı düzeltmesi sonrasında frontend tam paketi 24 dosyada 199 test; backend 28 pytest ile yeniden doğrulandı
+- Aşama 7B.4 sağlık yaşam döngüsü sonrasında frontend tam paketi 24 dosyada 204 test ve üretim derlemesi; backend Ruff, strict mypy ve 28 pytest ile doğrulandı
+
 ### Eklendi
 
+- OpenAI adapter'ını koruyan, `/v1/chat/completions` kullanan 9Router yerel sağlayıcı adapter'ı
+- OpenAI/9Router sağlayıcı seçimi, erişilebilirlik/model/uyumluluk durumları ve doğrulanmamış vision özelliğini kapatan Türkçe arayüz
+- `AI_PROVIDER`, `NINEROUTER_BASE_URL`, `NINEROUTER_API_KEY`, `NINEROUTER_MODEL` ve ayrı uyumluluk doğrulama ayarları
+- Salt okunur `/v1/models` erişilebilirlik ve tam model kimliği denetimi
+- 9Router JSON çıktısı için katı Pydantic doğrulaması ve ayrı, varsayılan kapalı canlı entegrasyon testi
+
+### Güvenlik
+
+- 9Router adresi `http://127.0.0.1:20128/v1` ile sınırlandı; kimlik bilgili/uzak URL ve HTTP yönlendirmesi engellendi
+- Anahtar frontend'e taşınmadan backend'de tutuldu; sağlayıcı hatasında diğer sağlayıcıya sessiz fallback yapılmadı
+- Görsel aktarımı hem model kataloğu vision metadatasına hem ayrı operatör doğrulamasına bağlandı
+
+### Doğrulandı
+
+- İlk kontrolde yerel 9Router TCP ve `GET /v1/models` erişimi gerçek prompt göndermeden doğrulandı; son kontrolde süreç kapalı olduğundan doğru “kullanılamıyor” davranışı korundu
+- Frontend TypeScript/ESLint, 23 dosyada 193 test ve Vite üretim derlemesi başarılı
+- Backend Ruff, strict mypy ve 28 pytest başarılı; 3 canlı entegrasyon testi açık opt-in olmadığı için atlandı
+- Gerçek API anahtarı, prompt/model üretim çağrısı ve ücretli çağrı çalıştırılmadı
+
+## [0.8.0] — 2026-11-09
+
+### Eklendi
+
+- Python/FastAPI backend, `/api/health`, `/api/ai/design` ve plan JSON şeması uç noktaları
+- Ortamdan seçilen modelle OpenAI Responses API ve Pydantic Structured Outputs uyarlayıcısı
+- Açık veri aktarım onayı; ücretli çağrılar için varsayılan kapalı sunucu ayarı
+- Sunucu tarafı JPEG/PNG/WebP decode, imza, 8 MB, 8.192 px, 32 MP ve üst veri eşleşme güvenlik kapısı
+- Yerel oran/eşzamanlılık/yinelenen istek, çıktı tokenı, zaman aşımı ve sınırlı yeniden deneme kontrolleri
+- Çizgi, polyline, kübik Bézier, elips/dikdörtgen ve nokta kümesini placement nesnelerine dönüştüren plan yorumlayıcı
+- Desteklenmeyen bileşen, geometrik yaklaştırma, gerçek adet, kullanım ve uyarı önizleme raporu
+- İptal, geç yanıt ve yinelenen tıklama korumalı gerçek backend istemcisi
+- Frontend/backend ortak `AiDesignPlan 1.0` sözleşme örneği ve ayrı opt-in canlı entegrasyon testi
 - Eğri motifler için saf kümülatif yay uzunluğu örnekleyicisi
 - Motif üretiminde minimum güvenlik aralığından ayrı hedef boncuk aralığı
 - Sol sürükleme, Shift + sol sürükleme, Space + sol ve orta tuş jest kararlarının otomatik testleri
+- Serbest metin, örnek tarif, referans görsel ve fiziksel kısıtları içeren “Yapay Zekâ ile Tasarla” arayüzü
+- Kullanıcı seçimi, AI seçimi ve birlikte seçim katalog yetki modları
+- Sağlayıcıdan bağımsız `AiDesignProvider` ve `AiPlanPlacementGenerator` portları
+- Sürümlü `AiDesignRequest 1.0` ve bileşen/katman/yoğunluk/simetri/talimat/uyarı içeren `AiDesignPlan 1.0`
+- AI planı ve placement önerisi için katalog, koordinat, açı, boyut, adet, motif sınırı ve kesin geometri doğrulama kapıları
+- JPEG/PNG/WebP dosya imzası, 8 MB, 8.192 px ve 32 MP referans görsel güvenlik sınırları
 
 ### Değiştirildi
 
@@ -17,15 +76,29 @@ Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) yaklaşımın�
 - Yoğunluk artık rastgele boncuk atlamaz; komşu merkez mesafesini düzenli büyütür
 - Karışık malzemelerde aralık, katalog boyutları ve yol teğetine göre dönüş açılarıyla hesaplanır
 - Açık ve kapalı eğri artıkları komşu yerleşimlere deterministik biçimde dağıtılır; kesin testte çakışan eğri adayı önce sınırlı komşu teğet gevşetmesiyle yeniden denenir
+- Akıllı motif motoru ayrı “Geometrik araçlar” bölümüne taşındı; mevcut davranışı korundu
+- Aşama göstergesi 7B oldu; AI taslakları kullanıcı kabulüne kadar proje/geçmiş/JSON dışında geçici durumda tutuluyor
+- API anahtarı frontend'e girmeden HTTP sağlayıcı portu güvenli FastAPI backend'e bağlandı
+- `AiDesignPlan 1.0` geriye uyumlu isteğe bağlı parametrik geometri açıklamasıyla genişletildi
 
 ### Doğrulandı
 
-- TypeScript, ESLint, 16 dosyada 152 otomatik test ve Vite üretim derlemesi başarılı
+- Frontend TypeScript, ESLint, 23 dosyada 191 otomatik test ve Vite üretim derlemesi başarılı
+- Backend Ruff, strict mypy ve 22 pytest başarılı; gerçek ücretli entegrasyon testi açık opt-in olmadığı için atlandı
 - Tarayıcı üzerinde manuel etkileşim/görsel QA yapılmadı
+- Gerçek OpenAI anahtarı kullanılmadı ve ücretli API çağrısı çalıştırılmadı
 
 ### Planlanan
 
-- Aşama 7: Kullanıcı onayı olmadan başlanmayacak referans görsel analizi
+- Sonraki aşama yalnız yeni kullanıcı onayıyla başlatılacak
+
+### Güvenlik ve gizlilik
+
+- `OPENAI_API_KEY` yalnız backend ortamındadır; frontend paketinde anahtar veya `VITE_` anahtar değişkeni yoktur
+- Ücretli çağrı `AI_CALLS_ENABLED=false` varsayımıyla kapalıdır; uygulama anahtarsız başlar
+- Açık onaydan sonra referans görsel geçici olarak backend/sağlayıcıya iletilebilir; proje JSON'una veya LocalStorage'a yazılmaz
+- OpenAI isteği `store=False` kullanır; ham metin/görsel uygulama loglarında veya veritabanında tutulmaz
+- Sağlayıcı çıktısı doğrulanmadan plan, placement veya proje durumu olarak kabul edilmez
 
 ## [0.7.0] — 2026-11-09
 

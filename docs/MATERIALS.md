@@ -214,6 +214,20 @@ Motif üreticisi de normal `Placement` nesneleri oluşturur. Üretilen nesne gen
 
 Motif türü, yoğunluk, simetri, göreli malzeme oranı ve seed Aşama 6'da geçici araç ayarıdır. Bunlar tekrar üretilebilir tarif olarak saklanmadığından proje şeması `1.1` kalır. Uygulanmış placement nesneleri mevcut JSON kaydet/aç akışında eksiksiz korunur.
 
+### Aşama 7A AI malzeme yetkisi
+
+- **Malzemeleri ben seçeyim:** İzin kümesi kullanıcının işaretlediği etkin katalog kimlikleridir; tasarım bu kümenin dışına çıkamaz.
+- **Yapay zekâ seçsin:** Kullanıcı bu modu seçerek etkin kataloğun tamamını aday küme olarak yetkilendirir; katalog dışı kimlik yine yasaktır.
+- **Birlikte seçelim:** İşaretlenen kimlikler zorunludur; diğer etkin katalog kayıtları tamamlayıcı adaydır.
+
+Planın `materialIds` alanı ve her bileşenin yerleşim talimatı bu izin kümesine karşı doğrulanır. AI placement önerisi ayrıca planın malzeme kümesine karşı sınanır. Malzeme boyutu/şekli hiçbir AI çıktısından okunmaz; her zaman katalog kaydından alınır.
+
+### Aşama 7B backend katalog aktarımı
+
+Frontend yalnız görev için gerekli katalog alanlarını gönderir: `id`, ad, şekil, `widthMm`, `heightMm`, renk, isteğe bağlı pul delik çapı ve etkinlik. Oluşturma/güncelleme zamanları ve yerel saklama ayrıntıları sağlayıcı isteğine girmez.
+
+Backend kataloğu bağımsız Pydantic modeliyle yeniden doğrular. `user-only` yalnız seçilen etkin kimlikleri; `ai-selects` etkin kataloğun tamamını; `collaborative` etkin kataloğu izinli, kullanıcının seçtiklerini zorunlu sayar. Sağlayıcı planı bilinmeyen, devre dışı veya modun izin vermediği kimliği içerirse bütün plan reddedilir. Placement boyutları yine AI çıktısından değil bu katalog kayıtlarından okunur.
+
 ## 11. Şema sürümleme
 
 - `schemaVersion` anlamsal `major.minor` biçimindedir.

@@ -46,7 +46,7 @@ describe("temel uygulama kabuğu", () => {
     expect(screen.getByRole("heading", { name: "Malzeme kütüphanesi" })).toBeInTheDocument();
     expect(await screen.findByTestId("design-workspace")).toHaveTextContent("Motif 200 × 250 mm");
     expect(screen.getByRole("heading", { name: "Tasarım özellikleri" })).toBeInTheDocument();
-    expect(screen.getByText("Aşama 6")).toBeInTheDocument();
+    expect(screen.getByText("Aşama 7B")).toBeInTheDocument();
   });
 
   it("proje işlemlerini etkin, geçmiş işlemlerini duruma bağlı tutar", () => {
@@ -327,6 +327,27 @@ describe("temel uygulama kabuğu", () => {
     expect(screen.queryByRole("dialog", { name: "Motif oluştur" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Geri al" }));
     expect(screen.getByTestId("placement-state")).toBeEmptyDOMElement();
+  });
+
+  it("AI backend ulaşılamadığında dürüst durum gösterir, editörü değiştirmez ve araçları korur", async () => {
+    const user = userEvent.setup();
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    render(<App />);
+    expect(screen.getByText("Geometrik araçlar")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Motif oluştur" })).toBeEnabled();
+
+    await user.click(screen.getByRole("button", { name: "Yapay Zekâ ile Tasarla" }));
+    expect(screen.getByRole("dialog", { name: "Yapay Zekâ ile Tasarla" })).toBeInTheDocument();
+    expect((await screen.findAllByText("Yerel AI sunucusuna ulaşılamadı.")).length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: "Gerçek AI planı oluştur" })).toBeDisabled();
+    expect(screen.getByRole("checkbox", { name: /seçtiğiniz yapay zekâ sağlayıcısına gönderilecektir/ })).not.toBeChecked();
+    expect(screen.getByTestId("placement-state")).toBeEmptyDOMElement();
+    expect(screen.getByText("Tüm değişiklikler kaydedildi")).toBeInTheDocument();
+    expect(consoleError).toHaveBeenCalledWith(
+      "[AI sağlık] Backend bağlantısı veya sağlık sözleşmesi okunamadı.",
+      expect.objectContaining({ endpoint: "/api/health" }),
+    );
+    consoleError.mockRestore();
   });
 
   it("kaydedilmemiş tasarımı motif ile değiştirmeden önce açık onay alır", async () => {
